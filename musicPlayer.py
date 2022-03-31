@@ -21,9 +21,10 @@ class Player(pg.GraphicsLayoutWidget):
         
         """Initializer."""
         super().__init__()
+        self.setMaximumHeight(400)
         self.plot = self.addPlot()
 
-        self.plot.setTitle(title, size = "15pt")
+        self.plot.setTitle(title, size="15pt")
         self.plot.setLabel('bottom', 'Time', 's')
         
         self.setBackground(f'{COLOR1}')
@@ -31,7 +32,7 @@ class Player(pg.GraphicsLayoutWidget):
         self.plot.getAxis('bottom').setPen(f"{COLOR4}")
 
         self.region = pg.LinearRegionItem()
-        self.region.setRegion([0, 10])
+        self.region.setRegion([0.2, 0.21])
         
         self.plot.addItem(self.region, ignoreBounds=True)
 

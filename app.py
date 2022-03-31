@@ -1,7 +1,9 @@
 # !/usr/bin/python
 
 # import Plotter.py Class
+import imp
 from musicPlayer import Player
+from spectrogram import MplCanvas
 
 # Definition of Main Color Palette
 from Defs import COLOR1,COLOR2,COLOR3,COLOR4, COLOR5
@@ -24,6 +26,7 @@ from pyqtgraph.dockarea import *
 import sys
 import os
 import logging
+
 
 class Window(QMainWindow):
     """Main Window."""
@@ -102,26 +105,12 @@ class Window(QMainWindow):
         self.mainTab = QWidget()
         self.mainTab.setStyleSheet(f"""background: {COLOR4}""")
         self.mainLayout()
-        # TODO: change title of each tab by appropriate title.
-        tabs.addTab(self.mainTab, "Main tab")
+        tabs.addTab(self.mainTab, "Music")
         
-        self.deviceTab1 = QWidget()
-        self.deviceTab1.setStyleSheet(f"""background: {COLOR4}""")
-        self.deviceTabLayout(self.deviceTab1)
-        # TODO: change title of each tab by appropriate title.
-        tabs.addTab(self.deviceTab1, "Piano")
-
-        self.deviceTab2 = QWidget()
-        self.deviceTab2.setStyleSheet(f"""background: {COLOR4}""")
-        self.deviceTabLayout(self.deviceTab2)
-        # TODO: change title of each tab by appropriate title.
-        tabs.addTab(self.deviceTab2, "Device 2")
-
-        self.deviceTab3 = QWidget()
-        self.deviceTab3.setStyleSheet(f"""background: {COLOR4}""")
-        self.deviceTabLayout(self.deviceTab3)
-        # TODO: change title of each tab by appropriate title.
-        tabs.addTab(self.deviceTab3, "Device 3")
+        self.devicesTab = QWidget()
+        self.devicesTab.setStyleSheet(f"""background: {COLOR4}""")
+        self.devicesTabLayout(self.devicesTab)
+        tabs.addTab(self.devicesTab, "Instruments")
 
         outerLayout.addWidget(tabs)
         ######### INIT GUI #########
@@ -142,14 +131,74 @@ class Window(QMainWindow):
     def mainLayout(self):
         mainLayout = QVBoxLayout()
 
+        topLayout = QHBoxLayout()
+
+        # Player layout
+        playerLayout = QVBoxLayout()
+        # Player plot
         playerPlot = Player("Music")
-        mainLayout.addWidget(playerPlot)
+        # Control Panel of player
+        controlPanel = QHBoxLayout()
+        # Progress Panel of player
+        progressPanel = QHBoxLayout()
+
+        startLabel = QLabel("--:--")
+        progressSlider = QSlider(Qt.Horizontal)
+        endLabel = QLabel("--:--")
+
+        progressPanel.addWidget(startLabel)
+        progressPanel.addWidget(progressSlider)
+        progressPanel.addWidget(endLabel)
+
+
+        playButton = QPushButton()
+        playButton.setIcon(QIcon("images/play.ico"))
+        playButton.setStyleSheet(f"""font-size:14px; 
+                            border-radius: 6px;
+                            border: 1px solid {COLOR1};
+                            padding: 5px 15px; 
+                            background: {COLOR4}; 
+                            color: {COLOR4};""")
+
+        soundIcon = QLabel()
+        soundIcon.setPixmap(QPixmap('images/downVol.svg'))
+        soundSlider = QSlider(Qt.Horizontal)
+        soundSlider.setValue(50)
+        soundlabel = QLabel("50")
+
+        controlPanel.addWidget(playButton,1)
+        controlPanel.addSpacerItem(QSpacerItem(450, 10, QSizePolicy.Expanding))
+        controlPanel.addWidget(soundIcon)
+        controlPanel.addWidget(soundSlider,3)
+        controlPanel.addWidget(soundlabel)
+
+        playerLayout.addWidget(playerPlot)
+        playerLayout.addLayout(progressPanel)
+        playerLayout.addLayout(controlPanel)
+
+        # Player layout
+        spectrogramLayout = QVBoxLayout()
+        # Spectrogram plot
+        spectrogramPlot = MplCanvas()
+
+        spectrogramLayout.addWidget(spectrogramPlot)
+        spectrogramLayout.addSpacerItem(QSpacerItem(10, 31, QSizePolicy.Expanding))
+
+        topLayout.addLayout(playerLayout,5)
+        topLayout.addLayout(spectrogramLayout,3)
+
+        bottomLayout = QHBoxLayout()
+
+        mainLayout.addLayout(topLayout)
+        mainLayout.addLayout(bottomLayout)
 
         self.mainTab.setLayout(mainLayout)
 
-    def deviceTabLayout(self, deviceTab):
+    def devicesTabLayout(self, deviceTab):
         mainLayout = QVBoxLayout()
-        # TODO: Add layout of piano
+        # TODO: Add layout of Piano
+        # TODO: Add layout of Clarinet
+        # TODO: Add layout of Drum
 
         deviceTab.setLayout(mainLayout)
 
