@@ -7,7 +7,6 @@ import numpy as np
 
 class MplCanvas(FigureCanvasQTAgg):
     
-    
     def __init__(self, parent=None, width=5, height=4, dpi=100):
         self.fig = Figure(figsize=(width, height), dpi=dpi)
         self.axes = self.fig.add_subplot(111)
@@ -17,9 +16,7 @@ class MplCanvas(FigureCanvasQTAgg):
         super(MplCanvas, self).__init__(self.fig)
     
     data_channel = [np.random.randint(-10,10) for i in range(500)]
-    colorPalette = "binary"
-    minContrast = 49
-    maxContrast = 50
+    colorPalette = "rainbow"
     
     def addColorBar(self):
         colormap = plt.cm.get_cmap(self.colorPalette)
@@ -32,23 +29,17 @@ class MplCanvas(FigureCanvasQTAgg):
         sm = plt.cm.ScalarMappable(cmap=colormap)
         self.colorBarSpectrogram.update_normal(sm)
 
-    def set_data_channel(self, data_channel):
-        self.data_channel = data_channel
-
     def set_color(self, colorPalette):
         self.colorPalette = colorPalette
 
-    def set_minContrast(self, minContrast):
-        self.minContrast = minContrast - 100
-
-    def set_maxContrast(self, maxContrast):
-        self.maxContrast = maxContrast
+    def set_data_channel(self, data_channel):
+        self.data_channel = data_channel
 
     def plotSignal(self):
         fs = len(self.data_channel)   
         nfft = 10
         self.data_channel = np.array(self.data_channel)
-        pxx,  freq, t, self.cax = self.axes.specgram(self.data_channel, nfft, fs, cmap=self.colorPalette, noverlap=nfft/3, mode="psd", vmin=self.minContrast,vmax=self.maxContrast)
+        pxx,  freq, t, self.cax = self.axes.specgram(self.data_channel, nfft, fs, cmap=self.colorPalette, noverlap=nfft/3, mode="psd")
         self.draw()
         
     def clearSignal(self):

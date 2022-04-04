@@ -1,1 +1,3 @@
-# Musical-Instruments-Equalizer
+# Musical Instruments Equalizer
+
+## Description:
