@@ -1,6 +1,7 @@
 # !/usr/bin/python
 
 # importing numpy and pandas
+from matplotlib.pyplot import pause
 import numpy as np
 import pandas as pd
 import sys
@@ -24,15 +25,26 @@ class music():
         self.data = []
         self.crash_sound = pygame.mixer.Sound("src/crash.wav")
 
-    def loadFile(self, path):
+    def loadFile(self, path, firstTime=True):
+        pos = None
+        if not firstTime:
+            # Save prev pos
+            pos = self.getPosition() 
+            print(pos)
+
         # Stop prev sound
         pygame.mixer.music.unload()
         pygame.mixer.music.stop()
-
+        
         # Load new sound
         pygame.mixer.music.load(path)
+        if not firstTime:
+            # update previous pos
+            # self.setPosition(pos)
+            pass
+            
         pygame.mixer.music.play()
-    
+
     def loadArray(self, array):
         pygame.mixer.music.stop()
         array = self.arrayEdit(array)
@@ -55,6 +67,9 @@ class music():
         self.Channel.unpause()
         pygame.mixer.music.unpause()
     
+    def rewind(self):
+        pygame.mixer.music.play()
+
     def setVolume(self, volume):
         pygame.mixer.music.set_volume(volume/100)
         self.Channel.set_volume(volume/100)

@@ -25,14 +25,12 @@ class Player(pg.GraphicsLayoutWidget):
         self.plot = self.addPlot()
         self.playerPause = True
         
-        #self.setMaximumHeight(400)
         self.plot.setTitle(title, size="13pt")
         self.plot.setLabel('bottom', 'Time', 's')
         
         self.setBackground(f'{COLOR1}')
         self.plot.getAxis('left').setPen(f"{COLOR4}")
         self.plot.getAxis('bottom').setPen(f"{COLOR4}")
-        self.plot.setMouseEnabled(False)
 
         self.region = pg.LinearRegionItem()
         self.region.setEnabled(0)
@@ -66,12 +64,9 @@ class Player(pg.GraphicsLayoutWidget):
         self.region.setRegion([current-0.001, current+0.001])
 
     def updateLimits(self):
-        self.plot.setLimits(xMin=min(self.x), xMax=max(self.x), 
-                                yMin=min(self.y), yMax=max(self.y))
-        self.plot.setXRange(min=0, max=max(self.x), padding=0)
-
-        self.plot.enableAutoRange(axis='y')
-        self.plot.setAutoVisible(y=True)
+        self.plot.setLimits(xMin=0, xMax=np.int(max(self.x)), 
+                                 yMin=np.int(min(self.y)), yMax=np.int(max(self.y)))
+        self.plot.setYRange(np.int(min(self.y)), np.int(max(self.y)), padding=None, update=True)
 
 
     def clearPlot(self):

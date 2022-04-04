@@ -6,17 +6,20 @@ from spectrogram import MplCanvas
 from piano import Piano
 from sound import music
 from drum import Drum
+from Guitar import Guitar
 
-import simpleaudio as sa
 
 import datetime
 # Sound package
 from scipy.io import wavfile
 import scipy.io
+import io
+import soundfile as sf
+
 from mutagen.wave import WAVE
 import sounddevice as sd
 from pydub import AudioSegment
-
+import simpleaudio as sa
 
 # Definition of Main Color Palette
 from Defs import COLOR1,COLOR2,COLOR3,COLOR4, COLOR5
@@ -39,7 +42,13 @@ from pyqtgraph.dockarea import *
 # importing sys package
 import sys
 import os
+
 import logging
+logging.basicConfig(filename="logfile.log",
+                    filemode="a",
+                    format="(%(asctime)s)  | %(name)s | %(levelname)s |  %(message)s ",
+                    datefmt="%d  %B  %Y , %H:%M:%S")
+logger= logging.getLogger("Logging")
 
 class QHLine(QFrame):
     def __init__(self):
@@ -68,6 +77,7 @@ class Window(QMainWindow):
         self.time = list()
         # Length of time
         self.length = 0
+        self.samplerate = 0
 
         # Frequency Domain
         self.fftData = list()
@@ -105,7 +115,6 @@ class Window(QMainWindow):
 
     # Menu
     def createMenuBar(self):
-
         # MenuBar
         menuBar = self.menuBar()
         
@@ -128,6 +137,8 @@ class Window(QMainWindow):
 
         # Add file tab to the menu
         menuBar.addMenu(fileMenu)
+
+        logger.info("menubar has created.")
 
     # GUI
     def initUI(self):
@@ -171,7 +182,7 @@ class Window(QMainWindow):
             # contains all the metadata about the wavepack file
             audio_info = audio.info
             self.length = int(audio_info.length)
-            samplerate, self.data = wavfile.read(path)
+            self.samplerate, self.data = wavfile.read(path)
             self.data = np.int16(np.mean(self.data, axis=1))
 
         self.time = np.linspace(0, self.length, len(self.data))
@@ -189,7 +200,7 @@ class Window(QMainWindow):
         
         # Compute the one-dimensional discrete Fourier Transform for real input.
         
-        self.fourierTransform(self.data, samplerate)
+        self.fourierTransform(self.data, self.samplerate)
         
         self.updateEverything()
 
@@ -228,6 +239,15 @@ class Window(QMainWindow):
                             background: {COLOR4}; 
                             color: {COLOR4};""")
 
+        self.restartButton = QPushButton()
+        self.restartButton.setIcon(QIcon("images/rewind.ico"))
+        self.restartButton.setStyleSheet(f"""font-size:14px; 
+                            border-radius: 6px;
+                            border: 1px solid {COLOR1};
+                            padding: 5px 15px; 
+                            background: {COLOR4}; 
+                            color: {COLOR4};""")
+
         self.soundIcon = QLabel()
         self.soundIcon.setPixmap(QPixmap('images/downVol.svg'))
         self.soundSlider = QSlider(Qt.Horizontal)
@@ -235,6 +255,8 @@ class Window(QMainWindow):
         self.soundlabel = QLabel("50%")
 
         controlPanel.addWidget(self.playButton ,1)
+        controlPanel.addWidget(QVLine())
+        controlPanel.addWidget(self.restartButton,1)
         controlPanel.addSpacerItem(QSpacerItem(500, 10, QSizePolicy.Minimum, QSizePolicy.Expanding))
         controlPanel.addWidget(self.soundIcon)
         controlPanel.addWidget(self.soundSlider,3)
@@ -264,14 +286,14 @@ class Window(QMainWindow):
         bottomLayout = QHBoxLayout()
         
         # Clarinet instrument slider
-        clarinetSlider = QSlider()
+        guitarSlider = QSlider()
         # Drum instrument slider
         drumSlider = QSlider()
         # Piano instrument slider
         pianoSlider = QSlider()
         
-        bottomLayout.addLayout(self.sliderInstrumentLayout(clarinetSlider,"images/clarinetIcon.png", (200, 990)))
-        bottomLayout.addLayout(self.sliderInstrumentLayout(drumSlider,"images/drumIcon.png", (90,150)))
+        bottomLayout.addLayout(self.sliderInstrumentLayout(guitarSlider,"images/guitarIcon.ico", (155, 630)))
+        bottomLayout.addLayout(self.sliderInstrumentLayout(drumSlider,"images/drumIcon.png", (50,150)))
         bottomLayout.addLayout(self.sliderInstrumentLayout(pianoSlider,"images/pianoIcon.png", (1000,2000)))
 
         mainLayout.addLayout(topLayout,1)
@@ -286,18 +308,18 @@ class Window(QMainWindow):
 
         TopLayout = QHBoxLayout()
 
-        # TODO: Add layout of Clarinet
-        # Add image of drums
-        clarinetphoto = QLabel(deviceTab)
-        clarinetImg = QPixmap('images/clarinet.png').scaled(550,400)
-        clarinetphoto.setPixmap(clarinetImg)
-        clarinetphoto.setGeometry(850, 100, 550, 400)
-        
         # TODO: Add layout of Drum
         drumLayout = QHBoxLayout()
         self.Drum = Drum()
         drumLayout.addWidget(self.Drum)
         TopLayout.addLayout(drumLayout)
+
+        # TODO: Add layout of guitar
+        # Add image of guitar
+        guitarLayout = QHBoxLayout()
+        self.Guitar = Guitar()
+        guitarLayout.addWidget(self.Guitar)
+        TopLayout.addLayout(guitarLayout)
 
         # TODO: Add layout of Piano
         pianoLayout = QHBoxLayout()
@@ -351,23 +373,25 @@ class Window(QMainWindow):
         self.freqFftData = np.fft.rfftfreq(n=len(self.data), d=1./samplerate)
 
     def equalizeSound(self, gain, freqRange):
+        self.fourierTransform(self.data, self.samplerate)
+
         Min_Freq = freqRange[0]
         Max_Freq = freqRange[1]
-
-        self.fftData[(self.freqFftData >= Min_Freq) & (self.freqFftData <= Max_Freq)] = \
-             self.fftData[(self.freqFftData >= Min_Freq) & (self.freqFftData <= Max_Freq)] * gain
-
-        print(self.fftData)
+        rangeFreq = (self.freqFftData >= Min_Freq) & (self.freqFftData <= Max_Freq)
+        self.fftData[rangeFreq] *= 1.3**(gain) if gain > -9 else 0
         
-        self.getIfft()
-    
-    def getIfft(self):
-        self.data = np.fft.irfft(self.fftData)
-        self.data = np.ascontiguousarray(self.data, dtype=np.int32)
-        self.Normalized_data = self.data / self.data.max()
-        self.data = (self.soundSlider.value() / 100) * self.Normalized_data
+        equalized = self.getIfft()
+        sf.write("src/temp.wav", equalized, 44100)
 
+        self.speaker.loadFile("src/temp.wav", False)
         self.updateEverything()
+
+    # Inverse fourier transform
+    def getIfft(self):
+        equalizedData = np.fft.irfft(self.fftData)
+        equalizedData = np.asanyarray(equalizedData, dtype=np.int16)
+
+        return equalizedData
 
     def playPause(self):
         if self.playerPlot.playerPause == True :
@@ -406,8 +430,6 @@ class Window(QMainWindow):
 
     # After each edit on array
     def updateEverything(self):
-        #self.speaker.loadArray(self.data)
-
         if self.playerPlot.playerPause == True :
             self.speaker.pause()
         else:
@@ -424,11 +446,16 @@ class Window(QMainWindow):
         # Start signal
         self.updateData() 
 
+    # Rewind music
+    def restartMusic(self):
+        self.speaker.rewind()
+
     # Connect actions
     def connect(self):
         # TODO: put any necessary connect actions
         self.soundSlider.valueChanged[int].connect(self.soundChange)
         self.playButton.clicked.connect(self.playPause)
+        self.restartButton.clicked.connect(self.restartMusic)
     
     # Exit the application
     def exit(self):

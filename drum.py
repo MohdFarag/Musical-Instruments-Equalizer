@@ -2,7 +2,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 from threading import Thread # This will support us for multithreading
 from functools import partial
-import simpleaudio as sa
+import sounddevice as sd
 import numpy as np
 
 class Drum(QtWidgets.QWidget):
@@ -14,16 +14,17 @@ class Drum(QtWidgets.QWidget):
 
     def setupUi(self):
         self.setObjectName("centralwidget")
+        self.frequency_tons = {"1": 20, "2": 40}
 
         # Add image of drums
         drumphoto = QtWidgets.QLabel(self)
         drumImg = QtGui.QPixmap('images/drum.png').scaled(500,300)
         drumphoto.setPixmap(drumImg)
-        drumphoto.setGeometry(QtCore.QRect(100, 100, 500, 300))
+        drumphoto.setGeometry(QtCore.QRect(0, 0, 500, 300))
 
         # Buttons
         self.rightBtn = QtWidgets.QPushButton(self)
-        self.rightBtn.setGeometry(450, 105, 30, 30)
+        self.rightBtn.setGeometry(350, 5, 30, 30)
         self.rightBtn.setStyleSheet("""QPushButton {
                                         background: transparent;border-radius: 8px; padding: 6px;
                                     }
@@ -37,7 +38,7 @@ class Drum(QtWidgets.QWidget):
         self.rightBtn.setObjectName("rightBtn")
 
         self.leftBtn = QtWidgets.QPushButton(self)
-        self.leftBtn.setGeometry(205, 125, 30, 30)
+        self.leftBtn.setGeometry(105, 25, 30, 30)
         self.leftBtn.setStyleSheet("""QPushButton {
                                         background: transparent;border-radius: 8px; padding: 6px;
                                     }
@@ -59,36 +60,32 @@ class Drum(QtWidgets.QWidget):
     def getOctave(self):
         return self.octave
 
-    def get_instrument_notes(self, base_freq, denominator):
-        note_freq = {self.getOctave()[note_index]: base_freq * pow(self.piano_mode, (note_index / denominator)) for note_index in
-                     range(len(self.getOctave()))}
-        note_freq[''] = 0.0  # silent freq
-        return note_freq
-    
-    def amplifying_wave(self,data):
-        data = data * (16300/np.max(data))  # amplifying the wave
-        data = data.astype(np.int16)
-        return data
-
-    def get_wave(self, freq, duration=0.5):
-        amplitude = 4096
-        self.sample_rate = 44100  # Hz
-        time = np.linspace(0, duration, int(44100 * duration))
-        wave = amplitude * np.sin(2 * np.pi * freq * time)
-        return wave
-
-    def played_instrument_key(self, key_index, base_freq, den):
-        notesFreqs = self.get_instrument_notes(base_freq, den)
-        sound = self.getOctave()[key_index]
-        song = [self.get_wave(notesFreqs[note]) for note in sound.split('-')]
-        song = np.concatenate(song)
-        data = song.astype(np.int16)
-        data=self.amplifying_wave(data)
-        sa.play_buffer(data, 1, 2, 44100)
-
     def connect(self):        
-        self.rightBtn.clicked.connect(partial(self.played_instrument_key, 0, 523.25, 12)) 
-        self.leftBtn.clicked.connect(partial(self.played_instrument_key, 0, 587.33, 12))
+        self.rightBtn.clicked.connect(partial(self.generateDrum, self.frequency_tons["1"])) 
+        self.leftBtn.clicked.connect(partial(self.generateDrum, self.frequency_tons["2"]))
+
+    def karplus_strong_drum(self, wavetable, n_samples, prob):
+        samples = []
+        current_sample = 0
+        previous_value = 0
+        while len(samples) < n_samples:
+            r = np.random.binomial(1, prob)
+            sign = float(r == 1) * 2 - 1
+            wavetable[current_sample] = sign * 0.5 * (wavetable[current_sample] + previous_value)
+            samples.append(wavetable[current_sample])
+            previous_value = samples[-1]
+            current_sample += 1
+            current_sample = current_sample % wavetable.size
+        return np.array(samples)
+
+    def generateDrum(self, freq):
+        fs = 8000
+        wavetable_size = fs // freq
+        wavetable = np.ones(wavetable_size)
+
+        sample = self.karplus_strong_drum(wavetable, 1 * fs, 0.3)
+        sd.play(sample, fs)
+
 
     def retranslateUi(self):
         _translate = QtCore.QCoreApplication.translate
