@@ -139,7 +139,7 @@ class Guitar(QtWidgets.QWidget):
 
         wavetable = (2 * np.random.randint(0, 2, wavetable_size) - 1).astype(np.float64)
         sample = self.karplus_strong(wavetable, 2 * fs)
-        sa.play(sample, fs)
+        sd.play(sample, fs)
 
 
     def retranslateUi(self):

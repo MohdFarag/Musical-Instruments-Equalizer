@@ -12,8 +12,11 @@ class Piano(QtWidgets.QWidget):
         super().__init__()
         self.setupUi()
         self.octave = ['C', 'c', 'D', 'd', 'E', 'F', 'f', 'G', 'g', 'A', 'a', 'B']
-        self.piano_mode = 1
-
+        self.piano_mode = 0
+    
+    def setMode(self, index):
+        self.piano_mode = index
+        
     def setupUi(self):
         self.setObjectName("centralwidget")
     

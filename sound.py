@@ -8,7 +8,7 @@ import sys
 
 import pygame
 from pygame.locals import *
-
+import soundfile as sf
 
 class music():
     """Main Plot."""
@@ -26,11 +26,10 @@ class music():
         self.crash_sound = pygame.mixer.Sound("src/crash.wav")
 
     def loadFile(self, path, firstTime=True):
-        pos = None
+        # Save prev pos
+        pos = 0
         if not firstTime:
-            # Save prev pos
-            pos = self.getPosition() 
-            print(pos)
+            pos = self.getPosition()
 
         # Stop prev sound
         pygame.mixer.music.unload()
@@ -38,12 +37,7 @@ class music():
         
         # Load new sound
         pygame.mixer.music.load(path)
-        if not firstTime:
-            # update previous pos
-            # self.setPosition(pos)
-            pass
-            
-        pygame.mixer.music.play()
+        pygame.mixer.music.play(-1)
 
     def loadArray(self, array):
         pygame.mixer.music.stop()
@@ -58,6 +52,11 @@ class music():
             array = np.repeat(array.reshape(len(array), 1), 2, axis = 1)
 
         return array
+
+    def writeArray(self, path, equalizedArr):
+        pygame.mixer.music.unload()
+        pygame.mixer.music.stop()
+        sf.write("src/temp.wav", equalizedArr, 44100, closefd=True)
 
     def pause(self):
         self.Channel.pause()

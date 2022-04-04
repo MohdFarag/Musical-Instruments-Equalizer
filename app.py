@@ -1,6 +1,8 @@
 # !/usr/bin/python
 
 # import Plotter.py Class
+from ast import Num
+from importlib.resources import path
 from musicPlayer import Player
 from spectrogram import MplCanvas
 from piano import Piano
@@ -14,7 +16,6 @@ import datetime
 from scipy.io import wavfile
 import scipy.io
 import io
-import soundfile as sf
 
 from mutagen.wave import WAVE
 import sounddevice as sd
@@ -70,6 +71,7 @@ class Window(QMainWindow):
         super().__init__()
 
         # Initialize Variable
+        self.gain_List = [1, 1, 1]
         self.timer = QtCore.QTimer()
         # Time Domain
         self.dataPlot = list()
@@ -292,9 +294,9 @@ class Window(QMainWindow):
         # Piano instrument slider
         pianoSlider = QSlider()
         
-        bottomLayout.addLayout(self.sliderInstrumentLayout(guitarSlider,"images/guitarIcon.ico", (155, 630)))
-        bottomLayout.addLayout(self.sliderInstrumentLayout(drumSlider,"images/drumIcon.png", (50,150)))
-        bottomLayout.addLayout(self.sliderInstrumentLayout(pianoSlider,"images/pianoIcon.png", (1000,2000)))
+        bottomLayout.addLayout(self.sliderInstrumentLayout(guitarSlider,"images/guitarIcon.ico", (155, 630),0))
+        bottomLayout.addLayout(self.sliderInstrumentLayout(drumSlider,"images/drumIcon.png", (50,150),1))
+        bottomLayout.addLayout(self.sliderInstrumentLayout(pianoSlider,"images/pianoIcon.png", (1000,2000),2))
 
         mainLayout.addLayout(topLayout,1)
         mainLayout.addWidget(QHLine())
@@ -327,17 +329,30 @@ class Window(QMainWindow):
         self.piano = Piano()
         spaceLabel = QLabel()
 
+        self.settingsInstruments = QComboBox()
+        piano_modes_names = ["Octave","Major sixth","Minor sixth","Perfect fifth","Perfect fourth","Major third","Minor third"]
+        for item in piano_modes_names:
+            self.settingsInstruments.addItem(item)
+        
+        self.settingsInstruments.currentIndexChanged.connect(self.setPianoMode)
+
         pianoLayout.addWidget(spaceLabel, 3)
         pianoLayout.addWidget(self.piano, 10)
 
+
         mainLayout.addSpacerItem(QSpacerItem(10, 100, QSizePolicy.Expanding))
-        mainLayout.addLayout(TopLayout)
-        mainLayout.addLayout(pianoLayout)
+        mainLayout.addLayout(TopLayout,20)
+        mainLayout.addLayout(pianoLayout,15)
+        mainLayout.addWidget(QLabel("Settings"), 1)
+        mainLayout.addWidget(self.settingsInstruments,1)
 
         deviceTab.setLayout(mainLayout)
 
+    def setPianoMode(self):
+        self.piano.setMode(self.settingsInstruments.currentIndex())
+
     # slider Layout
-    def sliderInstrumentLayout(self, instrumentSlider, iconPath, hzRange):
+    def sliderInstrumentLayout(self, instrumentSlider, iconPath, hzRange, num):
         instrumentLayout = QVBoxLayout()
         instrumentLayout.setAlignment(Qt.AlignCenter)
 
@@ -352,7 +367,7 @@ class Window(QMainWindow):
         instrumentSlider.setSingleStep(1)
         instrumentSlider.setValue(1)
         
-        instrumentSlider.valueChanged[int].connect(lambda: self.equalizeSound(instrumentSlider.value(), hzRange))
+        instrumentSlider.valueChanged[int].connect(lambda: self.equalizeSound(instrumentSlider.value(), hzRange, num))
 
         minLabel = QLabel("-10 db")
         minLabel.setAlignment(Qt.AlignCenter)
@@ -367,23 +382,31 @@ class Window(QMainWindow):
         instrumentLayout.addWidget(photo)
 
         return instrumentLayout
-
+    
+    # Fourier transform
     def fourierTransform(self, data, samplerate):
         self.fftData = np.copy(np.fft.rfft(data))
         self.freqFftData = np.fft.rfftfreq(n=len(self.data), d=1./samplerate)
 
-    def equalizeSound(self, gain, freqRange):
+    # Equalize sound
+    def equalizeSound(self, gain, freqRange, num):
         self.fourierTransform(self.data, self.samplerate)
 
         Min_Freq = freqRange[0]
         Max_Freq = freqRange[1]
         rangeFreq = (self.freqFftData >= Min_Freq) & (self.freqFftData <= Max_Freq)
-        self.fftData[rangeFreq] *= 1.3**(gain) if gain > -9 else 0
+        print("Before",gain)
+        if gain < 0: 
+            gain = 1/np.abs(gain)
+        print("After",gain)
+        self.fftData[rangeFreq] /= self.gain_List[num]
+        self.gain_List[num] = gain 
+        self.fftData[rangeFreq] *= gain
         
-        equalized = self.getIfft()
-        sf.write("src/temp.wav", equalized, 44100)
-
+        self.data = self.getIfft()
+        self.speaker.writeArray("src/temp.wav", self.data)
         self.speaker.loadFile("src/temp.wav", False)
+
         self.updateEverything()
 
     # Inverse fourier transform
