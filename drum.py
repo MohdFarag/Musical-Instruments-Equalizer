@@ -14,8 +14,9 @@ class Drum(QtWidgets.QWidget):
 
     def setupUi(self):
         self.setObjectName("centralwidget")
-        self.frequency_tons = {"1": 20, "2": 40}
-
+        self.frequency_tons = {"1": 30, "2": 40}
+        self.waveAmp = 0.5
+    
         # Add image of drums
         drumphoto = QtWidgets.QLabel(self)
         drumImg = QtGui.QPixmap('images/drum.png').scaled(500,300)
@@ -57,8 +58,11 @@ class Drum(QtWidgets.QWidget):
         self.connect()
         self.retranslateUi()
 
-    def getOctave(self):
-        return self.octave
+    def editFreq(self, value, labelText):
+        self.frequency_tons["1"] = int(3/4 * value)
+        self.frequency_tons["2"] = int(value)
+        self.waveAmp = int(value) / 100
+        labelText.setText(str(value))
 
     def connect(self):        
         self.rightBtn.clicked.connect(partial(self.generateDrum, self.frequency_tons["1"])) 
@@ -71,7 +75,7 @@ class Drum(QtWidgets.QWidget):
         while len(samples) < n_samples:
             r = np.random.binomial(1, prob)
             sign = float(r == 1) * 2 - 1
-            wavetable[current_sample] = sign * 0.5 * (wavetable[current_sample] + previous_value)
+            wavetable[current_sample] = sign * self.waveAmp * (wavetable[current_sample] + previous_value)
             samples.append(wavetable[current_sample])
             previous_value = samples[-1]
             current_sample += 1

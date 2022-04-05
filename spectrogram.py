@@ -1,9 +1,20 @@
+import sys
+import os
+
 # matplotlib
 import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
 import numpy as np
+
+# Logging configuration
+import logging
+logging.basicConfig(filename="errlog.log",
+                    filemode="a",
+                    format="(%(asctime)s)  | %(name)s | %(levelname)s:%(message)s",
+                    datefmt="%d  %B  %Y , %H:%M:%S",
+                    level=os.environ.get("LOGLEVEL", "INFO"))
 
 class MplCanvas(FigureCanvasQTAgg):
     
@@ -19,10 +30,13 @@ class MplCanvas(FigureCanvasQTAgg):
     colorPalette = "rainbow"
     
     def addColorBar(self):
-        colormap = plt.cm.get_cmap(self.colorPalette)
-        sm = plt.cm.ScalarMappable(cmap=colormap)
-        self.colorBarSpectrogram = self.fig.colorbar(sm)
-        self.colorBarSpectrogram.solids.set_edgecolor("face")
+        try:
+            colormap = plt.cm.get_cmap(self.colorPalette)
+            sm = plt.cm.ScalarMappable(cmap=colormap)
+            self.colorBarSpectrogram = self.fig.colorbar(sm)
+            self.colorBarSpectrogram.solids.set_edgecolor("face")
+        except:
+            logging.error("Failed to add color bar.")
 
     def updateColorBar(self):
         colormap = plt.cm.get_cmap(self.colorPalette + "_r")
@@ -35,12 +49,14 @@ class MplCanvas(FigureCanvasQTAgg):
     def set_data_channel(self, data_channel):
         self.data_channel = data_channel
 
-    def plotSignal(self):
-        fs = len(self.data_channel)   
-        nfft = 10
-        self.data_channel = np.array(self.data_channel)
-        pxx,  freq, t, self.cax = self.axes.specgram(self.data_channel, nfft, fs, cmap=self.colorPalette, noverlap=nfft/3, mode="psd")
-        self.draw()
+    def plotSignal(self, fs):
+        # try:
+            self.data_channel = np.array(self.data_channel)
+            pxx,  freq, t, self.cax = self.axes.specgram(self.data_channel, Fs=fs, cmap=self.colorPalette, mode="psd")
+            self.draw()
+        # except:
+        #     logging.error("Failed to plot Spectrogram.")  
+        #     print("Error:  failed to plot spectrogram")         
         
     def clearSignal(self):
         self.axes.clear()

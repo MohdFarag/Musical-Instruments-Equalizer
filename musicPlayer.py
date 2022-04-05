@@ -1,7 +1,9 @@
 # !/usr/bin/python
+# !/usr/bin/python
+import sys
+import os
 
 # importing Qt widgets
-from pickle import TRUE
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
@@ -16,6 +18,14 @@ import pandas as pd
 # importing pyqtgraph as pg
 import pyqtgraph as pg
 
+# Logging configuration
+import logging
+logging.basicConfig(filename="errlog.log",
+                    filemode="a",
+                    format="(%(asctime)s)  | %(name)s | %(levelname)s:%(message)s",
+                    datefmt="%d  %B  %Y , %H:%M:%S",
+                    level=os.environ.get("LOGLEVEL", "INFO"))
+
 class Player(pg.GraphicsLayoutWidget):
     """Main Plot."""
     def __init__(self,title=""):
@@ -23,7 +33,9 @@ class Player(pg.GraphicsLayoutWidget):
         """Initializer."""
         super().__init__()
         self.plot = self.addPlot()
-        self.playerPause = True
+        self.playerPlay = False
+        self.y = [0,0]
+        self.x = [0,0]
         
         self.plot.setTitle(title, size="13pt")
         self.plot.setLabel('bottom', 'Time', 's')
@@ -35,29 +47,23 @@ class Player(pg.GraphicsLayoutWidget):
         self.region = pg.LinearRegionItem()
         self.region.setEnabled(0)
         self.region.setMovable(False)
+
+        self.plotSignal(0, self.y)
         
         self.changeRegion(0)
 
         self.plot.addItem(self.region, ignoreBounds=True)
     
-        self.y = [0]
-        self.x = [0]
 
-    def plotSignal(self, length, y):        
-        if length == 0 :
-            length = 1
-            
-        # Set data
-        self.x = np.linspace(0, length, len(y))
-        self.y = y
-
+    def plotSignal(self, length, y):
+    
         # Plot
-        plotLine = self.plot.plot(self.x, self.y)
-        plotLine.setData(self.x, self.y)  # Update the data.
-        
+        self.plotLine = self.plot.plot(self.x, self.y)
+
+        # Change region
         self.changeRegion(0)
-        self.region.setClipItem(plotLine)
-        self.updateLimits()
+        self.region.setClipItem(self.plotLine)
+
 
     def changeRegion(self, current):
         # Current variable represent current time in seconds
@@ -68,6 +74,18 @@ class Player(pg.GraphicsLayoutWidget):
                                  yMin=np.int(min(self.y)), yMax=np.int(max(self.y)))
         self.plot.setYRange(np.int(min(self.y)), np.int(max(self.y)), padding=None, update=True)
 
+    def updateData(self, length, y):        
+        if length == 0 :
+            length = 1
+            
+        # Set data
+        self.y = y
+        self.x = np.linspace(0, length, len(y))
+
+        self.plotLine.setData(self.x, self.y)
+
+        # Change limits
+        self.updateLimits()
 
     def clearPlot(self):
         self.plot.clear()

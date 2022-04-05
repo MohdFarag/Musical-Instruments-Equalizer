@@ -25,7 +25,7 @@ class Guitar(QtWidgets.QWidget):
 
         # Buttons
         self.Btn1 = QtWidgets.QPushButton(self)
-        self.Btn1.setGeometry(485, 114, 5, 5)
+        self.Btn1.setGeometry(455, 114, 50, 5)
         self.Btn1.setStyleSheet("""QPushButton {
                                         background: transparent;border-radius: 8px; padding: 6px;
                                     }
@@ -37,7 +37,7 @@ class Guitar(QtWidgets.QWidget):
                                     }""")
 
         self.Btn2 = QtWidgets.QPushButton(self)
-        self.Btn2.setGeometry(485, 122, 5, 5)
+        self.Btn2.setGeometry(455, 122, 50, 5)
         self.Btn2.setStyleSheet("""QPushButton {
                                         background: transparent;border-radius: 8px; padding: 6px;
                                     }
@@ -49,7 +49,7 @@ class Guitar(QtWidgets.QWidget):
                                     }""")
         
         self.Btn3 = QtWidgets.QPushButton(self)
-        self.Btn3.setGeometry(485, 129, 5, 5)
+        self.Btn3.setGeometry(455, 129, 50, 5)
         self.Btn3.setStyleSheet("""QPushButton {
                                         background: transparent;border-radius: 8px; padding: 6px;
                                     }
@@ -61,7 +61,7 @@ class Guitar(QtWidgets.QWidget):
                                     }""")
 
         self.Btn4 = QtWidgets.QPushButton(self)
-        self.Btn4.setGeometry(485, 136, 5, 5)
+        self.Btn4.setGeometry(455, 136, 50, 5)
         self.Btn4.setStyleSheet("border: 3px solid blue; border-radius: 40px;")
         self.Btn4.setStyleSheet("""QPushButton {
                                         background: transparent;border-radius: 8px; padding: 6px;
@@ -74,7 +74,7 @@ class Guitar(QtWidgets.QWidget):
                                     }""")
         
         self.Btn5 = QtWidgets.QPushButton(self)
-        self.Btn5.setGeometry(485, 140, 5, 5)
+        self.Btn5.setGeometry(455, 140, 50, 5)
         self.Btn5.setStyleSheet("border: 3px solid blue; border-radius: 40px;")
         self.Btn5.setStyleSheet("""QPushButton {
                                         background: transparent;border-radius: 8px; padding: 6px;
@@ -87,7 +87,7 @@ class Guitar(QtWidgets.QWidget):
                                     }""")
 
         self.Btn6 = QtWidgets.QPushButton(self)
-        self.Btn6.setGeometry(485, 150, 5, 5)
+        self.Btn6.setGeometry(455, 150, 50, 5)
         self.Btn6.setStyleSheet("border: 3px solid blue; border-radius: 40px;")
         self.Btn6.setStyleSheet("""QPushButton {
                                         background: transparent;border-radius: 8px; padding: 6px;

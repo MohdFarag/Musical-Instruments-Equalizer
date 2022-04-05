@@ -11,11 +11,19 @@ class Piano(QtWidgets.QWidget):
         """Initializer."""
         super().__init__()
         self.setupUi()
+        self.allkeysInput = None
+        self.lastkeyInput = None
         self.octave = ['C', 'c', 'D', 'd', 'E', 'F', 'f', 'G', 'g', 'A', 'a', 'B']
-        self.piano_mode = 0
+        self.pianoModes = {0:2,1:(5/2),2:(8/5),3:1.5,4:(4/3),5:(5/4),6:(6/5)}
+        self.pianoMode = 2
     
+    def setInputs(self, allkeysInput, lastkeyInput):
+        self.allkeysInput = allkeysInput
+        self.lastkeyInput = lastkeyInput
+
     def setMode(self, index):
-        self.piano_mode = index
+        self.pianoMode = self.pianoModes.get(index)
+
         
     def setupUi(self):
         self.setObjectName("centralwidget")
@@ -436,9 +444,9 @@ class Piano(QtWidgets.QWidget):
         return self.octave
 
     def get_instrument_notes(self, base_freq, denominator):
-        note_freq = {self.getOctave()[note_index]: base_freq * pow(self.piano_mode, (note_index / denominator)) for note_index in
+        note_freq = {self.getOctave()[note_index]: base_freq * pow(self.pianoMode, (note_index / denominator)) for note_index in
                      range(len(self.getOctave()))}
-        note_freq[''] = 0.0  # silent freq
+        note_freq[''] = 0.0  # Silent freq
         return note_freq
     
     def amplifying_wave(self,data):
@@ -460,7 +468,13 @@ class Piano(QtWidgets.QWidget):
         song = np.concatenate(song)
         data = song.astype(np.int16)
         data=self.amplifying_wave(data)
+
+        self.setEnteredKey(sound, self.allkeysInput, self.lastkeyInput)
         sa.play_buffer(data, 1, 2, 44100)
+
+    def setEnteredKey(self, key, allKeysInput, lastKeyInput):
+        lastKeyInput.setText(key)
+        allKeysInput.setText(allKeysInput.text() + " " + key)
 
     def connect(self):        
         # These are white keys

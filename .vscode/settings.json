@@ -2,9 +2,12 @@
     "cSpell.words": [
         "astype",
         "Ifft",
+        "ndim",
         "pygame",
         "pyshine",
         "qlineargradient",
+        "rfft",
+        "rfftfreq",
         "sndarray",
         "wavfile"
     ]
