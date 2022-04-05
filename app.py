@@ -1,8 +1,6 @@
 # !/usr/bin/python
 
-# import Plotter.py Class
-from ast import Num
-from importlib.resources import path
+# import Classes
 from musicPlayer import Player
 from spectrogram import MplCanvas
 from piano import Piano
@@ -14,13 +12,7 @@ from Guitar import Guitar
 import datetime
 # Sound package
 from scipy.io import wavfile
-import scipy.io
-import io
-
 from mutagen.wave import WAVE
-import sounddevice as sd
-from pydub import AudioSegment
-import simpleaudio as sa
 
 # Definition of Main Color Palette
 from Defs import COLOR1,COLOR2,COLOR3,COLOR4, COLOR5
@@ -29,7 +21,6 @@ from Defs import COLOR1,COLOR2,COLOR3,COLOR4, COLOR5
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
-from PyQt5.Qt import QFileInfo
 
 # importing numpy and pandas
 import numpy as np
@@ -44,6 +35,7 @@ from pyqtgraph.dockarea import *
 import sys
 import os
 
+# Logging configuration
 import logging
 logging.basicConfig(filename="logfile.log",
                     filemode="a",
@@ -185,7 +177,10 @@ class Window(QMainWindow):
             audio_info = audio.info
             self.length = int(audio_info.length)
             self.samplerate, self.data = wavfile.read(path)
-            self.data = np.int16(np.mean(self.data, axis=1))
+            
+            print("ndim:",np.ndim(self.data))
+            if np.ndim(self.data) > 1:
+                self.data = np.int16(np.mean(self.data, axis=1))
 
         self.time = np.linspace(0, self.length, len(self.data))
         self.playButton.setIcon(QIcon("images/pause.ico"))
@@ -242,7 +237,7 @@ class Window(QMainWindow):
                             color: {COLOR4};""")
 
         self.restartButton = QPushButton()
-        self.restartButton.setIcon(QIcon("images/rewind.ico"))
+        self.restartButton.setIcon(QIcon("images/rewind.svg"))
         self.restartButton.setStyleSheet(f"""font-size:14px; 
                             border-radius: 6px;
                             border: 1px solid {COLOR1};
@@ -257,8 +252,8 @@ class Window(QMainWindow):
         self.soundlabel = QLabel("50%")
 
         controlPanel.addWidget(self.playButton ,1)
+        controlPanel.addWidget(self.restartButton, 1)
         controlPanel.addWidget(QVLine())
-        controlPanel.addWidget(self.restartButton,1)
         controlPanel.addSpacerItem(QSpacerItem(500, 10, QSizePolicy.Minimum, QSizePolicy.Expanding))
         controlPanel.addWidget(self.soundIcon)
         controlPanel.addWidget(self.soundSlider,3)
@@ -390,20 +385,25 @@ class Window(QMainWindow):
 
     # Equalize sound
     def equalizeSound(self, gain, freqRange, num):
+        print(self.data)
         self.fourierTransform(self.data, self.samplerate)
+        
+        # Initialize min and max frequencies
+        minFreq = freqRange[0]
+        maxFreq = freqRange[1]
 
-        Min_Freq = freqRange[0]
-        Max_Freq = freqRange[1]
-        rangeFreq = (self.freqFftData >= Min_Freq) & (self.freqFftData <= Max_Freq)
-        print("Before",gain)
-        if gain < 0: 
+        # if gain negative
+        if gain < 0:
             gain = 1/np.abs(gain)
-        print("After",gain)
+
+        rangeFreq = (self.freqFftData >= minFreq) & (self.freqFftData <= maxFreq)
         self.fftData[rangeFreq] /= self.gain_List[num]
-        self.gain_List[num] = gain 
+        self.gain_List[num] = gain
         self.fftData[rangeFreq] *= gain
         
         self.data = self.getIfft()
+        print(self.data)
+        
         self.speaker.writeArray("src/temp.wav", self.data)
         self.speaker.loadFile("src/temp.wav", False)
 
