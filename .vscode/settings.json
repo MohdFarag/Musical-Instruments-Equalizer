@@ -2,6 +2,7 @@
     "cSpell.words": [
         "astype",
         "Ifft",
+        "irfft",
         "ndim",
         "pygame",
         "pyshine",

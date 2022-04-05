@@ -20,6 +20,7 @@ class MplCanvas(FigureCanvasQTAgg):
     
     def __init__(self, parent=None, width=5, height=4, dpi=100):
         self.fig = Figure(figsize=(width, height), dpi=dpi)
+        self.fig
         self.axes = self.fig.add_subplot(111)
         self.axes.set_title("Spectrogram", fontweight ="bold")
         self.axes.set_xlabel("Time")

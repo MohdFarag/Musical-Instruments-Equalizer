@@ -472,7 +472,7 @@ class Window(QMainWindow):
         instrumentSlider.setSingleStep(1)
         instrumentSlider.setValue(0)
         
-        instrumentSlider.valueChanged[int].connect(lambda: self.equalizeSound(instrumentSlider.value(), hzRange, num))
+        instrumentSlider.sliderReleased.connect(lambda: self.equalizeSound(instrumentSlider.value(), hzRange, num))
 
         minLabel = QLabel("-10 db")
         minLabel.setAlignment(Qt.AlignCenter)
@@ -593,6 +593,12 @@ class Window(QMainWindow):
     # Rewind music
     def restartMusic(self):
         self.speaker.rewind()
+        self.timer.start()
+        self.speaker.unpause()
+        self.playerPlot.playerPlay = True
+        self.playButton.setIcon(QIcon("images/pause.ico"))
+        self.statusBar.showMessage("Music is running.")
+        logging.info(f"Music player unpaused.")
 
     # Connect actions
     def connect(self):
