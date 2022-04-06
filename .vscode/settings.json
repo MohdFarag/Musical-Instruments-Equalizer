@@ -11,5 +11,12 @@
         "rfftfreq",
         "sndarray",
         "wavfile"
-    ]
+    ],
+    "workbench.editor.restoreViewState": false,
+    "files.restoreUndoStack": false,
+    "workbench.startupEditor": "none",
+    "editor.minimap.enabled": false,
+    "editor.wordWrap": "on",
+    "diffEditor.wordWrap": "on",
+    "editor.linkedEditing": true
 }

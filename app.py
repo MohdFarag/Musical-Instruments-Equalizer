@@ -1,7 +1,9 @@
 # !/usr/bin/python
 
+# AdditionsQt
+from additionsQt import *
 # import Classes
-from cProfile import label
+from additionsQt import *
 from musicPlayer import Player
 from spectrogram import MplCanvas
 from piano import Piano
@@ -44,27 +46,15 @@ logging.basicConfig(filename="errlog.log",
                     level=os.environ.get("LOGLEVEL", "INFO"))
 
 
-class QHLine(QFrame):
-    def __init__(self):
-        super(QHLine, self).__init__()
-        self.setFrameShape(QFrame.HLine)
-        self.setFrameShadow(QFrame.Sunken)
-
-class QVLine(QFrame):
-    def __init__(self):
-        super(QVLine, self).__init__()
-        self.setFrameShape(QFrame.VLine)
-        self.setFrameShadow(QFrame.Sunken)
-        
 class Window(QMainWindow):
     """Main Window."""
     def __init__(self):
-        
+
         """Initializer."""
         super().__init__()
+        logging.debug("Application started")
 
         # Initialize Variable
-        logging.debug("Application started")
         self.gain_List = [1, 1, 1]
         self.timer = QtCore.QTimer()
         # Time Domain
@@ -73,21 +63,20 @@ class Window(QMainWindow):
         # Length of time
         self.length = 0
         self.samplerate = 0
-
         # Frequency Domain
         self.fftData = np.array([0])
         self.freqFftData = np.array([0])
-
+        # Music
         self.speaker = music()
 
         # setting Icon
         self.setWindowIcon(QIcon('images/icon.ico'))
-          
+
         # setting  the fixed width of window
         width = 1400
         height = 800
         self.setMinimumSize(width,height)
-        
+
         # setting title
         self.setWindowTitle("Musical Instruments Equalizer")
 
@@ -95,12 +84,12 @@ class Window(QMainWindow):
         self.createMenuBar()
 
         self.initUI()
-        
+
         # Status Bar
         self.statusBar = QStatusBar()
         self.statusBar.setStyleSheet(f"""font-size:13px;
-                                 padding: 3px; 
-                                 color: {COLOR1}; 
+                                 padding: 3px;
+                                 color: {COLOR1};
                                  font-weight:900;""")
         self.statusBar.showMessage("Welcome to our application...")
         self.setStatusBar(self.statusBar)
@@ -108,24 +97,29 @@ class Window(QMainWindow):
         # Connect action
         self.connect()
 
+    def setTheme(self, theme):
+        self.spectrogramPlot.setMode(theme)
+
     # Menu
     def createMenuBar(self):
         # MenuBar
         menuBar = self.menuBar()
-        
+
         # Creating menus using a QMenu object
         fileMenu = QMenu("&File", self)
-        
+
+        # Open file in menu
         self.openFile = QAction("Open...",self)
         self.openFile.setShortcut("Ctrl+o")
         self.openFile.setStatusTip('Open a new signal')
 
         fileMenu.addAction(self.openFile)
 
+        # Exit file in menu
         self.quit = QAction("Exit",self)
         self.quit.setShortcut("Ctrl+q")
         self.quit.setStatusTip('Exit application')
-        
+
         fileMenu.addAction(self.quit)
 
         # Add file tab to the menu
@@ -144,15 +138,14 @@ class Window(QMainWindow):
         ######### INIT GUI #########
         # Initialize tab screen
         tabs = QTabWidget()
-        # tabs.setStyleSheet(f"""color:{COLOR1}; 
-        #                     font-size:15px;""")
+        tabs.setStyleSheet(f"""font-size:15px;""")
 
         # TODO: Add tabs and its functions
         self.mainTab = QWidget()
         # self.mainTab.setStyleSheet(f"""background: {COLOR4}""")
         self.mainLayout()
         tabs.addTab(self.mainTab, "Music")
-        
+
         self.devicesTab = QWidget()
         # self.devicesTab.setStyleSheet(f"""background: {COLOR4}""")
         self.devicesTabLayout(self.devicesTab)
@@ -165,8 +158,8 @@ class Window(QMainWindow):
     # Browse signal
     def browseSignal(self):
         # Open sound file
-        path, fileExtension = QFileDialog.getOpenFileName(None, "Load Sound File" ,filter="wav(*.wav)")        
-        
+        path, fileExtension = QFileDialog.getOpenFileName(None, "Load Sound File" ,filter="wav(*.wav)")
+
         if path == "":
                 self.speaker.crash()
                 logging.warning("File not specified!")
@@ -178,12 +171,12 @@ class Window(QMainWindow):
             audio_info = audio.info
             self.length = int(audio_info.length)
             self.samplerate, self.data = wavfile.read(path)
-            
+
             try:
                 if np.ndim(self.data) > 1:
                     self.data = np.int16(np.mean(self.data, axis=1))
             except:
-                logging.error(f"Array with {np.ndim(self.data)} dimension doesn't loaded successfully.")    
+                logging.error(f"Array with {np.ndim(self.data)} dimension doesn't loaded successfully.")
 
         self.time = np.linspace(0, self.length, len(self.data))
         self.playButton.setIcon(QIcon("images/pause.ico"))
@@ -194,10 +187,10 @@ class Window(QMainWindow):
         self.progressSlider.setMinimum(0)
         self.progressSlider.setMaximum(self.length)
         self.endLabel.setText(str(datetime.timedelta(seconds=self.length))[-5:7])
-        
+
         # Play sound
         self.speaker.loadFile(path)
-        
+
         # Compute the one-dimensional discrete Fourier Transform for real input.
         self.fourierTransform(self.data, self.samplerate)
 
@@ -274,13 +267,11 @@ class Window(QMainWindow):
         self.spectrogramPlot = MplCanvas()
         self.spectrogramPlot.clearSignal()
         self.spectrogramPlot.autoFillBackground()
-        self.spectrogramPlot.addColorBar()
 
         spectrogramLayout.addWidget(self.spectrogramPlot)
-        spectrogramLayout.addSpacerItem(QSpacerItem(10, 70, QSizePolicy.Expanding))
 
-        topLayout.addLayout(playerLayout,6)
-        topLayout.setSpacing(20)
+        topLayout.addLayout(playerLayout,5)
+        topLayout.setSpacing(10)
         topLayout.addLayout(spectrogramLayout,4)
 
         # Bottom part layout
@@ -432,14 +423,14 @@ class Window(QMainWindow):
         drumGroupBox.setLayout(vbox)
 
         return drumGroupBox
-    
+
     def guitarGroupBox(self):
         x = QLineEdit()
-     
+
         guitarGroupBox = QGroupBox('Guitar settings')
 
         gridBox = QGridLayout()
-        
+
         self.pianoSettings = QComboBox()
         piano_modes_names = ["Octave", "Major sixth", "Minor Sixth", "Perfect fifth", "Perfect Fourth", "Major Third", "Minor Third"]
         for item in piano_modes_names:
@@ -451,7 +442,7 @@ class Window(QMainWindow):
         guitarGroupBox.setLayout(gridBox)
 
         return guitarGroupBox
-    
+
     def setPianoMode(self):
         self.piano.setMode(self.pianoSettings.currentIndex())
 
