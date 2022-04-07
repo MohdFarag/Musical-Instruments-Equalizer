@@ -3,7 +3,6 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from threading import Thread # This will support us for multithreading
 from functools import partial
 import sounddevice as sd
-import simpleaudio as sa
 import numpy as np
 
 class Guitar(QtWidgets.QWidget):
