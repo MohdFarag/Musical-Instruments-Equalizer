@@ -8,9 +8,10 @@ import numpy as np
 
 class Guitar(QtWidgets.QWidget):
     def __init__(self):
-        
+
         """Initializer."""
         super().__init__()
+        self.duration = 0.48
         self.setupUi()
 
     def setupUi(self):
@@ -47,7 +48,7 @@ class Guitar(QtWidgets.QWidget):
                                     QPushButton:pressed {
                                         background-color: #070426;
                                     }""")
-        
+
         self.Btn3 = QtWidgets.QPushButton(self)
         self.Btn3.setGeometry(455, 129, 50, 5)
         self.Btn3.setStyleSheet("""QPushButton {
@@ -109,11 +110,14 @@ class Guitar(QtWidgets.QWidget):
         self.connect()
         self.retranslateUi()
 
-    def getOctave(self):
-        return self.octave
+    def changeDuration(self):
+        if self.duration == 0.50:
+            self.duration = 0.48
+        else :
+            self.duration = 0.50
 
-    def connect(self):        
-        self.Btn1.clicked.connect(partial(self.generateGuitar, self.frequency_tons["E1"])) 
+    def connect(self):
+        self.Btn1.clicked.connect(partial(self.generateGuitar, self.frequency_tons["E1"]))
         self.Btn2.clicked.connect(partial(self.generateGuitar, self.frequency_tons["A"]))
         self.Btn3.clicked.connect(partial(self.generateGuitar, self.frequency_tons["D"]))
         self.Btn4.clicked.connect(partial(self.generateGuitar, self.frequency_tons["G"]))
@@ -126,7 +130,7 @@ class Guitar(QtWidgets.QWidget):
         current_sample = 0
         previous_value = 0
         while len(samples) < n_samples:
-            wavetable[current_sample] = 0.5 * (wavetable[current_sample] + previous_value)
+            wavetable[current_sample] = self.duration * (wavetable[current_sample] + previous_value)
             samples.append(wavetable[current_sample])
             previous_value = samples[-1]
             current_sample += 1
@@ -134,10 +138,10 @@ class Guitar(QtWidgets.QWidget):
         return np.array(samples)
 
     def generateGuitar(self, freq):
-        fs = 30000
+        fs = 44100
         wavetable_size = fs // freq
 
-        wavetable = (2 * np.random.randint(0, 2, wavetable_size) - 1).astype(np.float64)
+        wavetable = (3 * np.random.randint(0, 2, wavetable_size) - 1).astype(np.float64)
         sample = self.karplus_strong(wavetable, 2 * fs)
         sd.play(sample, fs)
 

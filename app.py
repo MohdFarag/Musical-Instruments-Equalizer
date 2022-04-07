@@ -2,6 +2,7 @@
 
 # AdditionsQt
 from additionsQt import *
+from Threads import *
 # import Classes
 from additionsQt import *
 from musicPlayer import Player
@@ -23,6 +24,7 @@ from Defs import COLOR1,COLOR2,COLOR3,COLOR4, COLOR5
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
+from qtwidgets import AnimatedToggle
 
 # importing numpy and pandas
 import numpy as np
@@ -43,7 +45,7 @@ logging.basicConfig(filename="errlog.log",
                     filemode="a",
                     format="(%(asctime)s)  | %(name)s | %(levelname)s:%(message)s",
                     datefmt="%d  %B  %Y , %H:%M:%S",
-                    level=os.environ.get("LOGLEVEL", "INFO"))
+                    level=logging.INFO)
 
 
 class Window(QMainWindow):
@@ -96,6 +98,15 @@ class Window(QMainWindow):
 
         # Connect action
         self.connect()
+
+    def setFftData(self, data):
+        self.fftData = data
+
+    def setFreqFftData(self, data):
+        self.freqFftData = data
+
+    def setData(self, data):
+        self.data = data
 
     def setTheme(self, theme):
         self.spectrogramPlot.setMode(theme)
@@ -190,9 +201,8 @@ class Window(QMainWindow):
 
         # Play sound
         self.speaker.loadFile(path)
-
         # Compute the one-dimensional discrete Fourier Transform for real input.
-        self.fourierTransform(self.data, self.samplerate)
+        # self.fourierTransform(self.data, self.samplerate)
 
         # Update all data
         self.updateEverything()
@@ -225,20 +235,20 @@ class Window(QMainWindow):
 
         self.playButton = QPushButton()
         self.playButton.setIcon(QIcon("images/play.ico"))
-        self.playButton.setStyleSheet(f"""font-size:14px; 
+        self.playButton.setStyleSheet(f"""font-size:14px;
                             border-radius: 6px;
                             border: 1px solid {COLOR1};
-                            padding: 5px 15px; 
-                            background: {COLOR4}; 
+                            padding: 5px 15px;
+                            background: {COLOR4};
                             color: {COLOR4};""")
 
         self.restartButton = QPushButton()
         self.restartButton.setIcon(QIcon("images/rewind.svg"))
-        self.restartButton.setStyleSheet(f"""font-size:14px; 
+        self.restartButton.setStyleSheet(f"""font-size:14px;
                             border-radius: 6px;
                             border: 1px solid {COLOR1};
-                            padding: 5px 15px; 
-                            background: {COLOR4}; 
+                            padding: 5px 15px;
+                            background: {COLOR4};
                             color: {COLOR4};""")
 
         self.soundIcon = QLabel()
@@ -250,10 +260,13 @@ class Window(QMainWindow):
         controlPanel.addWidget(self.playButton ,1)
         controlPanel.addWidget(self.restartButton, 1)
         controlPanel.addWidget(QVLine())
-        controlPanel.addSpacerItem(QSpacerItem(500, 10, QSizePolicy.Minimum, QSizePolicy.Expanding))
+
+        #controlPanel.addSpacerItem(QSpacerItem(500, 10, QSizePolicy.Minimum, QSizePolicy.Expanding))
+        controlPanel.addWidget(QLabel(),10)
+
         controlPanel.addWidget(QVLine())
         controlPanel.addWidget(self.soundIcon)
-        controlPanel.addWidget(self.soundSlider,3)
+        controlPanel.addWidget(self.soundSlider,4)
         controlPanel.addWidget(self.soundlabel)
 
         playerLayout.addWidget(self.playerPlot)
@@ -276,17 +289,17 @@ class Window(QMainWindow):
 
         # Bottom part layout
         bottomLayout = QHBoxLayout()
-        
+
         # Clarinet instrument slider
-        guitarSlider = QSlider()
+        self.guitarSlider = QSlider()
         # Drum instrument slider
-        drumSlider = QSlider()
+        self.drumSlider = QSlider()
         # Piano instrument slider
-        pianoSlider = QSlider()
-        
-        bottomLayout.addLayout(self.sliderInstrumentLayoutEQ(guitarSlider,"images/guitarIcon.ico", (155, 630),0))
-        bottomLayout.addLayout(self.sliderInstrumentLayoutEQ(drumSlider,"images/drumIcon.png", (50,150),1))
-        bottomLayout.addLayout(self.sliderInstrumentLayoutEQ(pianoSlider,"images/pianoIcon.png", (1000,2000),2))
+        self.pianoSlider = QSlider()
+
+        bottomLayout.addLayout(self.sliderInstrumentLayoutEQ(self.guitarSlider,"images/guitarIcon.ico", (155, 630),0))
+        bottomLayout.addLayout(self.sliderInstrumentLayoutEQ(self.drumSlider,"images/drumIcon.png", (50,150),1))
+        bottomLayout.addLayout(self.sliderInstrumentLayoutEQ(self.pianoSlider,"images/pianoIcon.png", (1000,2000),2))
 
         mainLayout.addLayout(topLayout,1)
         mainLayout.addWidget(QHLine())
@@ -351,7 +364,7 @@ class Window(QMainWindow):
         pianoGroupBox = QGroupBox('Piano settings')
 
         VBox = QVBoxLayout()
-        
+
         self.pianoSettings = QComboBox()
         piano_modes_names = ["Octave", "Major sixth", "Minor Sixth", "Perfect fifth", "Perfect Fourth", "Major Third", "Minor Third"]
         for item in piano_modes_names:
@@ -367,7 +380,7 @@ class Window(QMainWindow):
             background: #000105;
             color: #fff;
             padding: 5px;
-            text-align: center; 
+            text-align: center;
         """)
 
         allKeysInput.setEnabled(0)
@@ -377,7 +390,7 @@ class Window(QMainWindow):
             background: #000105;
             color: #fff;
             padding: 5px;
-            text-align: center; 
+            text-align: center;
         """)
 
         inputs = QHBoxLayout()
@@ -395,14 +408,14 @@ class Window(QMainWindow):
         pianoGroupBox.setLayout(VBox)
 
         return pianoGroupBox
-    
+
     def drumGroupBox(self):
         drumGroupBox = QGroupBox('Drum settings')
 
         vbox = QVBoxLayout()
-        
+
         sliderH = QHBoxLayout()
-        
+
         self.drumSlider = QSlider(Qt.Horizontal)
         self.drumSlider.setFocusPolicy(Qt.StrongFocus)
         self.drumSlider.setMinimum(10)
@@ -410,7 +423,7 @@ class Window(QMainWindow):
         self.drumSlider.setTickInterval(50)
         self.drumSlider.setSingleStep(1)
         self.drumSlider.setValue(40)
-        
+
         sliderH.addWidget(self.drumSlider, 10)
         sliderValue = QLabel("40")
         sliderH.addWidget(sliderValue,1)
@@ -429,17 +442,18 @@ class Window(QMainWindow):
 
         guitarGroupBox = QGroupBox('Guitar settings')
 
-        gridBox = QGridLayout()
+        vBox = QVBoxLayout()
 
-        self.pianoSettings = QComboBox()
-        piano_modes_names = ["Octave", "Major sixth", "Minor Sixth", "Perfect fifth", "Perfect Fourth", "Major Third", "Minor Third"]
-        for item in piano_modes_names:
-            self.pianoSettings.addItem(item)
+        hBox = QHBoxLayout()
+        durationToggle = AnimatedToggle(checked_color="#FFB000", pulse_checked_color="#44FFB000")
+        durationToggle.toggled.connect(self.Guitar.changeDuration)
 
-        gridBox.addWidget(QLabel("Piano Settings:"),1, 1)
-        gridBox.addWidget(self.pianoSettings, 1, 2)
+        hBox.addWidget(QLabel("Short"))
+        hBox.addWidget(durationToggle)
+        hBox.addWidget(QLabel("Long"))
 
-        guitarGroupBox.setLayout(gridBox)
+        vBox.addLayout(hBox)
+        guitarGroupBox.setLayout(vBox)
 
         return guitarGroupBox
 
@@ -462,7 +476,7 @@ class Window(QMainWindow):
         instrumentSlider.setTickInterval(5)
         instrumentSlider.setSingleStep(1)
         instrumentSlider.setValue(0)
-        
+
         instrumentSlider.sliderReleased.connect(lambda: self.equalizeSound(instrumentSlider.value(), hzRange, num))
 
         minLabel = QLabel("-10 db")
@@ -478,7 +492,40 @@ class Window(QMainWindow):
         instrumentLayout.addWidget(photo)
 
         return instrumentLayout
-    
+
+    # Equalize sound
+    def equalizeSound(self, gain, freqRange, num):
+        # Disable sliders
+        self.guitarSlider.setEnabled(False)
+        self.drumSlider.setEnabled(False)
+        self.pianoSlider.setEnabled(False)
+
+        # Fourier transform for the sound
+        self.fourierTransform(self.data, self.samplerate)
+
+        # Initialize min and max frequencies
+        minFreq = freqRange[0]
+        maxFreq = freqRange[1]
+
+        rangeFreq = (self.freqFftData >= minFreq) & (self.freqFftData <= maxFreq)
+        self.fftData[rangeFreq] /= 10**(self.gain_List[num]/20)
+        self.fftData[rangeFreq] *= 10**(gain/20)
+        self.gain_List[num] = gain
+
+        logging.info(f"Gain of instrument {num} with frequency ranges between {minFreq} and {maxFreq} has changed to {gain}")
+
+        # Inverse fourier transform for the sound
+        self.data = self.inverseFourierTransform(self.fftData)
+
+        self.speaker.writeFile("src/temp.wav", self.data)
+        self.speaker.loadFile("src/temp.wav", False)
+
+        self.guitarSlider.setEnabled(True)
+        self.drumSlider.setEnabled(True)
+        self.pianoSlider.setEnabled(True)
+
+        self.updateEverything()
+
     # Fourier transform
     def fourierTransform(self, data, samplerate):
         try:
@@ -487,42 +534,19 @@ class Window(QMainWindow):
         except:
             logging.error(f"Failed to make DFT on array with {np.ndim(self.data)} dimension and shape = {np.shape(self.data)}.")
 
-    # Equalize sound
-    def equalizeSound(self, gain, freqRange, num):
-        # Fourier transform for the sound
-        self.fourierTransform(self.data, self.samplerate)
-        
-        # Initialize min and max frequencies
-        minFreq = freqRange[0]
-        maxFreq = freqRange[1]
-        
-        rangeFreq = (self.freqFftData >= minFreq) & (self.freqFftData <= maxFreq)
-        self.fftData[rangeFreq] /= 10**(self.gain_List[num]/20)
-        self.fftData[rangeFreq] *= 10**(gain/20)          
-        self.gain_List[num] = gain
-
-        logging.info(f"Gain of instrument {num} with frequency ranges between {minFreq} and {maxFreq} has changed to {gain}")
-
-        # Inverse fourier transform for the sound
-        self.data = self.inverseFourierTransform()
-        
-        self.speaker.writeFile("src/temp.wav", self.data)
-        self.speaker.loadFile("src/temp.wav", False)
-
-        self.updateEverything()
 
     # Inverse fourier transform
-    def inverseFourierTransform(self):
+    def inverseFourierTransform(self, fftData):
         try:
-            equalizedData = np.fft.irfft(self.fftData)
+            equalizedData = np.fft.irfft(fftData)
             if np.ndim(equalizedData) == 1:
                 equalizedData = np.asanyarray(equalizedData, dtype=np.int16)
             return equalizedData
         except:
-            logging.error(f"Failed to make Inverse DFT on array with {np.ndim(self.fftData)} dimension and shape = {np.shape(self.fftData)}.")
+            logging.error(f"Failed to make Inverse DFT on array with {np.ndim(fftData)} dimension and shape = {np.shape(fftData)}.")
 
     # Play and Pause Function
-    def playPause(self): 
+    def playPause(self):
         if self.playerPlot.playerPlay == True :
             # if player is unpaused, pause it.
             self.timer.stop()
@@ -540,7 +564,7 @@ class Window(QMainWindow):
             self.statusBar.showMessage("Music is running.")
             logging.info(f"Music player unpaused.")
 
-    # Change volume of the sound  
+    # Change volume of the sound
     def soundChange(self, value):
         if value >= 75 :
             self.soundIcon.setPixmap(QPixmap('images/upVol.svg'))
@@ -548,7 +572,7 @@ class Window(QMainWindow):
             self.soundIcon.setPixmap(QPixmap('images/downVol.svg'))
         else :
             self.soundIcon.setPixmap(QPixmap('images/zeroVol.svg'))
-        
+
         self.soundlabel.setText(str(value)+"%")
         self.speaker.setVolume(value)
         logging.info(f"sound of music changed to {value}%.")
@@ -557,22 +581,22 @@ class Window(QMainWindow):
         self.timer.setInterval(10)
         self.timer.timeout.connect(self.updateInstantly)
         self.timer.start()
-            
+
     def updateInstantly(self):
         # Update data while music is running
         self.playerPlot.changeRegion(self.speaker.getPosition()/1000)
         self.startLabel.setText(str(datetime.timedelta(seconds=int(self.speaker.getPosition()/1000)))[-5:7]) # Change text of start min
         self.progressSlider.setValue(int(self.speaker.getPosition()/1000)) # Change progress of player
-        
+
     # After each process on Array
     def updateEverything(self):
         if self.playerPlot.playerPlay == False :
             self.speaker.pause()
         else:
-            self.speaker.unpause()  
+            self.speaker.unpause()
 
         self.playerPlot.updateData(self.length, self.data)
-        
+
         # Spectrogram plot
         self.spectrogramPlot.clearSignal()
         self.spectrogramPlot.set_data_channel(self.data)
