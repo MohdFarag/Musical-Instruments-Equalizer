@@ -154,7 +154,6 @@ class Window(QMainWindow):
 
         # TODO: Add tabs and its functions
         self.mainTab = QWidget()
-        # self.mainTab.setStyleSheet(f"""background: {COLOR4}""")
         self.mainLayout()
         tabs.addTab(self.mainTab, "Music")
 
