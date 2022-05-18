@@ -298,7 +298,7 @@ class Window(QMainWindow):
         self.pianoSlider = QSlider()
 
         bottomLayout.addLayout(self.sliderInstrumentLayoutEQ(self.guitarSlider,"images/guitarIcon.ico", (155, 630),0))
-        bottomLayout.addLayout(self.sliderInstrumentLayoutEQ(self.drumSlider,"images/drumIcon.png", (50,150),1))
+        bottomLayout.addLayout(self.sliderInstrumentLayoutEQ(self.drumSlider,"images/drumIcon.png", (50,120),1))
         bottomLayout.addLayout(self.sliderInstrumentLayoutEQ(self.pianoSlider,"images/pianoIcon.png", (1000,2000),2))
 
         mainLayout.addLayout(topLayout,1)
