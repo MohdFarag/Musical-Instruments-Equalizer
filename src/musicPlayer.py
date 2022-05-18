@@ -17,6 +17,9 @@ import pandas as pd
 # importing pyqtgraph as pg
 import pyqtgraph as pg
 
+import warnings
+warnings.filterwarnings("ignore")
+
 # Logging configuration
 import logging
 logging.basicConfig(filename="errlog.log",

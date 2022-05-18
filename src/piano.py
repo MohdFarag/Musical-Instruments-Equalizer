@@ -1,8 +1,6 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-from threading import Thread # This will support us for multithreading
 from functools import partial
-import simpleaudio as sa
 import numpy as np
 import winsound
 from scipy.io.wavfile import *

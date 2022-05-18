@@ -28,13 +28,13 @@ class MplCanvas(FigureCanvasQTAgg):
         self.axes.set_ylabel("Frequency")
 
         # Color bar
-        colormap = plt.cm.get_cmap("rainbow")
+        colormap = plt.cm.get_cmap("viridis")
         sm = plt.cm.ScalarMappable(cmap=colormap)
         self.colorBarSpectrogram = self.fig.colorbar(sm)
         super(MplCanvas, self).__init__(self.fig)
 
     data_channel = [np.random.randint(-10,10) for i in range(500)]
-    colorPalette = "rainbow"
+    colorPalette = "viridis"
 
     def setMode(self, theme):
         if theme == "Dark":

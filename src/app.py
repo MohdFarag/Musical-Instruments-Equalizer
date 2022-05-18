@@ -39,6 +39,8 @@ from pyqtgraph.dockarea import *
 # importing sys package
 import sys
 import os
+import warnings
+warnings.filterwarnings("ignore")
 
 # Logging configuration
 import logging
@@ -297,9 +299,9 @@ class Window(QMainWindow):
         # Piano instrument slider
         self.pianoSlider = QSlider()
 
-        bottomLayout.addLayout(self.sliderInstrumentLayoutEQ(self.guitarSlider,"images/guitarIcon.ico", (155, 630),0))
-        bottomLayout.addLayout(self.sliderInstrumentLayoutEQ(self.drumSlider,"images/drumIcon.png", (50,120),1))
-        bottomLayout.addLayout(self.sliderInstrumentLayoutEQ(self.pianoSlider,"images/pianoIcon.png", (1000,2000),2))
+        bottomLayout.addLayout(self.sliderInstrumentLayoutEQ(self.guitarSlider,"images/guitarIcon.ico", (160, 600),0))
+        bottomLayout.addLayout(self.sliderInstrumentLayoutEQ(self.drumSlider,"images/drumIcon.png", (0,120),1))
+        bottomLayout.addLayout(self.sliderInstrumentLayoutEQ(self.pianoSlider,"images/pianoIcon.png", (1000,2500),2))
 
         mainLayout.addLayout(topLayout,1)
         mainLayout.addWidget(QHLine())
@@ -360,6 +362,7 @@ class Window(QMainWindow):
 
         deviceTab.setLayout(mainLayout)
 
+    # Piano settings
     def pianoGroupBox(self):
         pianoGroupBox = QGroupBox('Piano settings')
 
@@ -409,6 +412,10 @@ class Window(QMainWindow):
 
         return pianoGroupBox
 
+    def setPianoMode(self):
+        self.piano.setMode(self.pianoSettings.value())
+    
+    # Drum settings
     def drumGroupBox(self):
         drumGroupBox = QGroupBox('Drum settings')
 
@@ -437,8 +444,8 @@ class Window(QMainWindow):
 
         return drumGroupBox
 
+    # Guitar settings
     def guitarGroupBox(self):
-        x = QLineEdit()
 
         guitarGroupBox = QGroupBox('Guitar settings')
 
@@ -457,11 +464,9 @@ class Window(QMainWindow):
 
         return guitarGroupBox
 
-    def setPianoMode(self):
-        self.piano.setMode(self.pianoSettings.value())
-
     # slider Layout
     def sliderInstrumentLayoutEQ(self, instrumentSlider, iconPath, hzRange, num):
+
         # Instrument equalizer slider
         instrumentLayout = QVBoxLayout()
         instrumentLayout.setAlignment(Qt.AlignCenter)
@@ -475,7 +480,7 @@ class Window(QMainWindow):
         instrumentSlider.setMaximum(10)
         instrumentSlider.setTickInterval(5)
         instrumentSlider.setSingleStep(1)
-        instrumentSlider.setValue(0)
+        instrumentSlider.setValue(1)
 
         instrumentSlider.sliderReleased.connect(lambda: self.equalizeSound(instrumentSlider.value(), hzRange, num))
 
@@ -508,9 +513,12 @@ class Window(QMainWindow):
         maxFreq = freqRange[1]
 
         rangeFreq = (self.freqFftData >= minFreq) & (self.freqFftData <= maxFreq)
-        self.fftData[rangeFreq] /= 10**(self.gain_List[num]/20)
-        self.fftData[rangeFreq] *= 10**(gain/20)
+        self.fftData[rangeFreq] /= 10**(self.gain_List[num]/10)
+        self.fftData[rangeFreq] *= 10**(gain/10)
         self.gain_List[num] = gain
+
+        print(num)
+        print(self.gain_List)
 
         logging.info(f"Gain of instrument {num} with frequency ranges between {minFreq} and {maxFreq} has changed to {gain}")
 
