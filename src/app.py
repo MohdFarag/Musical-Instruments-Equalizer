@@ -534,7 +534,6 @@ class Window(QMainWindow):
         except:
             logging.error(f"Failed to make DFT on array with {np.ndim(self.data)} dimension and shape = {np.shape(self.data)}.")
 
-
     # Inverse fourier transform
     def inverseFourierTransform(self, fftData):
         try:

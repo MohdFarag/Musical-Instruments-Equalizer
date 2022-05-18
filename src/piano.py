@@ -4,26 +4,40 @@ from threading import Thread # This will support us for multithreading
 from functools import partial
 import simpleaudio as sa
 import numpy as np
+import winsound
+from scipy.io.wavfile import *
 
 class Piano(QtWidgets.QWidget):
     def __init__(self):
         
         """Initializer."""
         super().__init__()
-        self.setupUi()
+        
+        self.pianoModes = { 0: 0.5,
+                            1: 0.4,
+                            2: 0.3, 
+                            3: 0.2, 
+                            4: 0.1, 
+                            5: 0.6, 
+                            6: 0.7
+                        }
+        
         self.allkeysInput = None
         self.lastkeyInput = None
-        self.octave = ['C', 'c', 'D', 'd', 'E', 'F', 'f', 'G', 'g', 'A', 'a', 'B']
-        self.pianoModes = {0:2,1:(5/2),2:(8/5),3:1.5,4:(4/3),5:(5/4),6:(6/5)}
-        self.pianoMode = 2
-    
+        
+        self.samplerate = 44100
+        self.base_freq = 261.63
+        
+        self.duration = 0.5
+
+        self.setupUi()
+ 
+    def setMode(self, index):
+        self.duration = self.pianoModes.get(index)
+
     def setInputs(self, allkeysInput, lastkeyInput):
         self.allkeysInput = allkeysInput
         self.lastkeyInput = lastkeyInput
-
-    def setMode(self, index):
-        self.pianoMode = self.pianoModes.get(index)
-
         
     def setupUi(self):
         self.setObjectName("centralwidget")
@@ -440,72 +454,81 @@ class Piano(QtWidgets.QWidget):
         self.connect()
         self.retranslateUi()
 
-    def getOctave(self):
-        return self.octave
+    ###########################################################
 
-    def get_instrument_notes(self, base_freq, denominator):
-        note_freq = {self.getOctave()[note_index]: base_freq * pow(self.pianoMode, (note_index / denominator)) for note_index in
-                     range(len(self.getOctave()))}
-        note_freq[''] = 0.0  # Silent freq
-        return note_freq
-    
-    def amplifying_wave(self,data):
-        data = data * (16300/np.max(data))  # amplifying the wave
-        data = data.astype(np.int16)
-        return data
+    def playInstrumentKey(self, music_note, note_num, duration):
+        if note_num == 4:
+            self.base_freq = 261.63
+        elif note_num == 5:
+            self.base_freq = 523.25
+        elif note_num == 6:
+            self.base_freq = 1046.50
 
-    def get_wave(self, freq, duration=0.5):
-        amplitude = 4096
-        self.sample_rate = 44100  # Hz
-        time = np.linspace(0, duration, int(44100 * duration))
-        wave = amplitude * np.sin(2 * np.pi * freq * time)
-        return wave
+        data = self.get_song_data(music_note, duration)
+        data = data * (16300/np.max(data))
+        write('./src/piano.wav', self.samplerate, data.astype(np.int16))
+        winsound.PlaySound('./src/piano.wav', winsound.SND_ALIAS)
 
-    def played_instrument_key(self, key_index, base_freq, den):
-        notesFreqs = self.get_instrument_notes(base_freq, den)
-        sound = self.getOctave()[key_index]
-        song = [self.get_wave(notesFreqs[note]) for note in sound.split('-')]
+    def get_song_data(self, music_notes, duration):
+        note_freqs = self.get_piano_notes()
+        song = [self.get_wave(note_freqs[note], duration) for note in music_notes.split('-')]
         song = np.concatenate(song)
-        data = song.astype(np.int16)
-        data=self.amplifying_wave(data)
+        return song.astype(np.int16)
 
-        self.setEnteredKey(sound, self.allkeysInput, self.lastkeyInput)
-        sa.play_buffer(data, 1, 2, 44100)
-
-    def setEnteredKey(self, key, allKeysInput, lastKeyInput):
-        lastKeyInput.setText(key)
-        allKeysInput.setText(allKeysInput.text() + " " + key)
-
+    def get_piano_notes(self):
+        '''
+        Returns a dict object for all the piano 
+        note's frequencies
+        '''
+        # White keys are in Uppercase and black keys (sharps) are in lowercase
+        octave = ['C', 'c', 'D', 'd', 'E', 'F', 'f', 'G', 'g', 'A', 'a', 'B'] 
+        base_freq = self.base_freq #Frequency of Note C4
+        
+        note_freqs = {octave[i]: base_freq * pow(2,(i/12)) for i in range(len(octave))}        
+        note_freqs[''] = 0.0
+        
+        return note_freqs
+        
+    def get_wave(self, freq, duration):
+        amplitude = 4096
+        t = np.linspace(0, duration, int(self.samplerate * duration))
+        wave = amplitude * np.sin(2 * np.pi * freq * t)
+        
+        return wave   
+        
+    ###########################################################
     def connect(self):        
         # These are white keys
-        self.c4.clicked.connect(partial(self.played_instrument_key, 0, 261.63, 12))
-        self.d4.clicked.connect(partial(self.played_instrument_key, 2, 293.66, 12))
-        self.e4.clicked.connect(partial(self.played_instrument_key, 4, 329.63, 12))
-        self.f4.clicked.connect(partial(self.played_instrument_key, 5, 349.23, 12))
-        self.g4.clicked.connect(partial(self.played_instrument_key, 7, 392.00, 12)) 
-        self.a4.clicked.connect(partial(self.played_instrument_key, 9, 440.00, 12)) 
-        self.b4.clicked.connect(partial(self.played_instrument_key, 11,493.88, 12))
+        self.c4.clicked.connect(partial(self.playInstrumentKey, "C", 4, self.duration))
+        self.d4.clicked.connect(partial(self.playInstrumentKey, "D", 4, self.duration))
+        self.e4.clicked.connect(partial(self.playInstrumentKey, "E", 4, self.duration))
+        self.f4.clicked.connect(partial(self.playInstrumentKey, "F", 4, self.duration))
+        self.g4.clicked.connect(partial(self.playInstrumentKey, "G", 4, self.duration)) 
+        self.a4.clicked.connect(partial(self.playInstrumentKey, "A", 4, self.duration)) 
+        self.b4.clicked.connect(partial(self.playInstrumentKey, "B", 4, self.duration))
 
-        self.c5.clicked.connect(partial(self.played_instrument_key, 0, 523.25, 12)) 
-        self.d5.clicked.connect(partial(self.played_instrument_key, 2, 587.33, 12)) 
-        self.e5.clicked.connect(partial(self.played_instrument_key, 4, 659.25, 12)) 
-        self.f5.clicked.connect(partial(self.played_instrument_key, 5, 698.46, 12))
-        self.g5.clicked.connect(partial(self.played_instrument_key, 7, 783.99, 12)) 
-        self.a5.clicked.connect(partial(self.played_instrument_key, 9, 880.00, 12)) 
-        self.b5.clicked.connect(partial(self.played_instrument_key, 11, 987.77, 12)) 
-        self.c6.clicked.connect(partial(self.played_instrument_key, 0, 1046.50, 12))
+        self.c5.clicked.connect(partial(self.playInstrumentKey, "C", 5, self.duration)) 
+        self.d5.clicked.connect(partial(self.playInstrumentKey, "D", 5, self.duration)) 
+        self.e5.clicked.connect(partial(self.playInstrumentKey, "E", 5, self.duration)) 
+        self.f5.clicked.connect(partial(self.playInstrumentKey, "F", 5, self.duration))
+        self.g5.clicked.connect(partial(self.playInstrumentKey, "G", 5, self.duration)) 
+        self.a5.clicked.connect(partial(self.playInstrumentKey, "A", 5, self.duration)) 
+        self.b5.clicked.connect(partial(self.playInstrumentKey, "B", 5, self.duration)) 
+        self.c6.clicked.connect(partial(self.playInstrumentKey, "C", 6, self.duration))
         
         # These are the black keys
-        self.c40.clicked.connect(partial(self.played_instrument_key,1, 277.18, 12)) 
-        self.c50.clicked.connect(partial(self.played_instrument_key,1, 554.37, 12)) 
-        self.d40.clicked.connect(partial(self.played_instrument_key,3, 311.13, 12)) 
-        self.d50.clicked.connect(partial(self.played_instrument_key,3, 622.25, 12)) 
-        self.f40.clicked.connect(partial(self.played_instrument_key,6, 369.99, 12)) 
-        self.f50.clicked.connect(partial(self.played_instrument_key,6, 739.99, 12)) 
-        self.g40.clicked.connect(partial(self.played_instrument_key,8, 415.30, 12)) 
-        self.g50.clicked.connect(partial(self.played_instrument_key,8, 830.61, 12)) 
-        self.a40.clicked.connect(partial(self.played_instrument_key,10, 466.16, 12)) 
-        self.a50.clicked.connect(partial(self.played_instrument_key,10, 932.33, 12))
+        self.c40.clicked.connect(partial(self.playInstrumentKey, "c", 4, self.duration)) 
+        self.d40.clicked.connect(partial(self.playInstrumentKey, "d", 4, self.duration)) 
+        self.f40.clicked.connect(partial(self.playInstrumentKey, "f", 4, self.duration))
+        self.g40.clicked.connect(partial(self.playInstrumentKey, "g", 4, self.duration)) 
+        self.a40.clicked.connect(partial(self.playInstrumentKey, "a", 4, self.duration))
+
+        self.c50.clicked.connect(partial(self.playInstrumentKey, "c", 5, self.duration)) 
+        self.d50.clicked.connect(partial(self.playInstrumentKey, "d", 5, self.duration)) 
+        self.f50.clicked.connect(partial(self.playInstrumentKey, "f", 5, self.duration))
+        self.g50.clicked.connect(partial(self.playInstrumentKey, "g", 5, self.duration)) 
+        self.a50.clicked.connect(partial(self.playInstrumentKey, "a", 5, self.duration))
+        
 
     def retranslateUi(self):
         _translate = QtCore.QCoreApplication.translate

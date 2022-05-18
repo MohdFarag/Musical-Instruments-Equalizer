@@ -34,7 +34,7 @@ class music():
         
         # Variables
         self.data = []
-        self.crash_sound = pygame.mixer.Sound("src/crash.wav")
+        self.crash_sound = pygame.mixer.Sound("./src/crash.wav")
 
     def loadFile(self, path, firstTime=True):
         # Save prev pos
@@ -74,7 +74,7 @@ class music():
         pygame.mixer.music.unload()
         pygame.mixer.music.stop()
         try :
-            sf.write("src/temp.wav", equalizedArr, 44100, closefd=True)
+            sf.write("./src/temp.wav", equalizedArr, 44100, closefd=True)
         except:
             logging.error("Failed to write temporarily sound file.")
 

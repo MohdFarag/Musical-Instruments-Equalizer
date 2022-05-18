@@ -72,15 +72,6 @@ class MplCanvas(FigureCanvasQTAgg):
         # Change color of axes
         self.axes.set_facecolor(axesColor)
 
-    def addColorBar(self):
-        try:
-            colormap = plt.cm.get_cmap(self.colorPalette)
-            sm = plt.cm.ScalarMappable(cmap=colormap)
-            self.colorBarSpectrogram = self.fig.colorbar(sm)
-            self.colorBarSpectrogram.solids.set_edgecolor("face")
-        except:
-            logging.error("Failed to add color bar.")
-
     def set_color(self, colorPalette):
         self.colorPalette = colorPalette
 
@@ -88,13 +79,13 @@ class MplCanvas(FigureCanvasQTAgg):
         self.data_channel = data_channel
 
     def plotSignal(self, fs):
-        # try:
+        try:
             self.data_channel = np.array(self.data_channel)
             pxx,  freq, t, self.cax = self.axes.specgram(self.data_channel, Fs=fs, cmap=self.colorPalette, mode="psd")
+            self.colorBarSpectrogram.update_normal(self.cax)
             self.draw()
-        # except:
-        #     logging.error("Failed to plot Spectrogram.")  
-        #     print("Error:  failed to plot spectrogram")         
+        except:
+            logging.error("Failed to plot Spectrogram.")  
         
     def clearSignal(self):
         self.axes.clear()
