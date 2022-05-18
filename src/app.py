@@ -365,10 +365,10 @@ class Window(QMainWindow):
 
         VBox = QVBoxLayout()
 
-        self.pianoSettings = QComboBox()
-        piano_modes_names = ["Octave", "Major sixth", "Minor Sixth", "Perfect fifth", "Perfect Fourth", "Major Third", "Minor Third"]
-        for item in piano_modes_names:
-            self.pianoSettings.addItem(item)
+        self.pianoSettings = QSlider(Qt.Horizontal)
+        self.pianoSettings.setMinimum(0)
+        self.pianoSettings.setValue(4)
+        self.pianoSettings.setMaximum(6)
 
         lastKeyInput = QLineEdit()
         allKeysInput = QLineEdit()
@@ -399,7 +399,7 @@ class Window(QMainWindow):
         self.piano.setInputs(allKeysInput, lastKeyInput)
 
         setting1 = QHBoxLayout()
-        setting1.addWidget(QLabel("Piano settings:"),1)
+        setting1.addWidget(QLabel("Note Duration:"),1)
         setting1.addWidget(self.pianoSettings, 5)
 
         VBox.addLayout(inputs)
@@ -458,7 +458,7 @@ class Window(QMainWindow):
         return guitarGroupBox
 
     def setPianoMode(self):
-        self.piano.setMode(self.pianoSettings.currentIndex())
+        self.piano.setMode(self.pianoSettings.value())
 
     # slider Layout
     def sliderInstrumentLayoutEQ(self, instrumentSlider, iconPath, hzRange, num):
@@ -624,7 +624,7 @@ class Window(QMainWindow):
         self.soundSlider.valueChanged[int].connect(self.soundChange)
         self.playButton.clicked.connect(self.playPause)
         self.restartButton.clicked.connect(self.restartMusic)
-        self.pianoSettings.currentIndexChanged.connect(self.setPianoMode)
+        self.pianoSettings.valueChanged[int].connect(self.setPianoMode)
 
     # Exit the application
     def exit(self):

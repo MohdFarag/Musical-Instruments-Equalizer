@@ -13,14 +13,13 @@ class Piano(QtWidgets.QWidget):
         """Initializer."""
         super().__init__()
         
-        self.pianoModes = { 0: 0.5,
-                            1: 0.4,
+        self.pianoModes = { 0: 0.1,
+                            1: 0.2,
                             2: 0.3, 
-                            3: 0.2, 
-                            4: 0.1, 
+                            3: 0.4, 
+                            4: 0.5, 
                             5: 0.6, 
-                            6: 0.7
-                        }
+                            6: 0.7 }
         
         self.allkeysInput = None
         self.lastkeyInput = None
@@ -38,7 +37,12 @@ class Piano(QtWidgets.QWidget):
     def setInputs(self, allkeysInput, lastkeyInput):
         self.allkeysInput = allkeysInput
         self.lastkeyInput = lastkeyInput
-        
+
+
+    def setEnteredKey(self, key, allKeysInput, lastKeyInput):
+        lastKeyInput.setText(key)
+        allKeysInput.setText(allKeysInput.text() + " " + key)
+
     def setupUi(self):
         self.setObjectName("centralwidget")
     
@@ -456,7 +460,7 @@ class Piano(QtWidgets.QWidget):
 
     ###########################################################
 
-    def playInstrumentKey(self, music_note, note_num, duration):
+    def playInstrumentKey(self, music_note, note_num):
         if note_num == 4:
             self.base_freq = 261.63
         elif note_num == 5:
@@ -464,15 +468,15 @@ class Piano(QtWidgets.QWidget):
         elif note_num == 6:
             self.base_freq = 1046.50
 
-        data = self.get_song_data(music_note, duration)
+        self.setEnteredKey(music_note, self.allkeysInput, self.lastkeyInput)
+        data = self.get_song_data(music_note)
         data = data * (16300/np.max(data))
         write('./src/piano.wav', self.samplerate, data.astype(np.int16))
         winsound.PlaySound('./src/piano.wav', winsound.SND_ALIAS)
 
-    def get_song_data(self, music_notes, duration):
+    def get_song_data(self, music_notes):
         note_freqs = self.get_piano_notes()
-        song = [self.get_wave(note_freqs[note], duration) for note in music_notes.split('-')]
-        song = np.concatenate(song)
+        song = self.get_wave(note_freqs[music_notes])
         return song.astype(np.int16)
 
     def get_piano_notes(self):
@@ -489,45 +493,46 @@ class Piano(QtWidgets.QWidget):
         
         return note_freqs
         
-    def get_wave(self, freq, duration):
+    def get_wave(self, freq):
         amplitude = 4096
-        t = np.linspace(0, duration, int(self.samplerate * duration))
+        t = np.linspace(0,  self.duration, int(self.samplerate * self.duration))
         wave = amplitude * np.sin(2 * np.pi * freq * t)
         
         return wave   
         
     ###########################################################
+  
     def connect(self):        
         # These are white keys
-        self.c4.clicked.connect(partial(self.playInstrumentKey, "C", 4, self.duration))
-        self.d4.clicked.connect(partial(self.playInstrumentKey, "D", 4, self.duration))
-        self.e4.clicked.connect(partial(self.playInstrumentKey, "E", 4, self.duration))
-        self.f4.clicked.connect(partial(self.playInstrumentKey, "F", 4, self.duration))
-        self.g4.clicked.connect(partial(self.playInstrumentKey, "G", 4, self.duration)) 
-        self.a4.clicked.connect(partial(self.playInstrumentKey, "A", 4, self.duration)) 
-        self.b4.clicked.connect(partial(self.playInstrumentKey, "B", 4, self.duration))
+        self.c4.clicked.connect(partial(self.playInstrumentKey, "C", 4))
+        self.d4.clicked.connect(partial(self.playInstrumentKey, "D", 4))
+        self.e4.clicked.connect(partial(self.playInstrumentKey, "E", 4))
+        self.f4.clicked.connect(partial(self.playInstrumentKey, "F", 4))
+        self.g4.clicked.connect(partial(self.playInstrumentKey, "G", 4)) 
+        self.a4.clicked.connect(partial(self.playInstrumentKey, "A", 4)) 
+        self.b4.clicked.connect(partial(self.playInstrumentKey, "B", 4))
 
-        self.c5.clicked.connect(partial(self.playInstrumentKey, "C", 5, self.duration)) 
-        self.d5.clicked.connect(partial(self.playInstrumentKey, "D", 5, self.duration)) 
-        self.e5.clicked.connect(partial(self.playInstrumentKey, "E", 5, self.duration)) 
-        self.f5.clicked.connect(partial(self.playInstrumentKey, "F", 5, self.duration))
-        self.g5.clicked.connect(partial(self.playInstrumentKey, "G", 5, self.duration)) 
-        self.a5.clicked.connect(partial(self.playInstrumentKey, "A", 5, self.duration)) 
-        self.b5.clicked.connect(partial(self.playInstrumentKey, "B", 5, self.duration)) 
-        self.c6.clicked.connect(partial(self.playInstrumentKey, "C", 6, self.duration))
+        self.c5.clicked.connect(partial(self.playInstrumentKey, "C", 5)) 
+        self.d5.clicked.connect(partial(self.playInstrumentKey, "D", 5)) 
+        self.e5.clicked.connect(partial(self.playInstrumentKey, "E", 5)) 
+        self.f5.clicked.connect(partial(self.playInstrumentKey, "F", 5))
+        self.g5.clicked.connect(partial(self.playInstrumentKey, "G", 5)) 
+        self.a5.clicked.connect(partial(self.playInstrumentKey, "A", 5)) 
+        self.b5.clicked.connect(partial(self.playInstrumentKey, "B", 5)) 
+        self.c6.clicked.connect(partial(self.playInstrumentKey, "C", 6))
         
         # These are the black keys
-        self.c40.clicked.connect(partial(self.playInstrumentKey, "c", 4, self.duration)) 
-        self.d40.clicked.connect(partial(self.playInstrumentKey, "d", 4, self.duration)) 
-        self.f40.clicked.connect(partial(self.playInstrumentKey, "f", 4, self.duration))
-        self.g40.clicked.connect(partial(self.playInstrumentKey, "g", 4, self.duration)) 
-        self.a40.clicked.connect(partial(self.playInstrumentKey, "a", 4, self.duration))
+        self.c40.clicked.connect(partial(self.playInstrumentKey, "c", 4)) 
+        self.d40.clicked.connect(partial(self.playInstrumentKey, "d", 4)) 
+        self.f40.clicked.connect(partial(self.playInstrumentKey, "f", 4))
+        self.g40.clicked.connect(partial(self.playInstrumentKey, "g", 4)) 
+        self.a40.clicked.connect(partial(self.playInstrumentKey, "a", 4))
 
-        self.c50.clicked.connect(partial(self.playInstrumentKey, "c", 5, self.duration)) 
-        self.d50.clicked.connect(partial(self.playInstrumentKey, "d", 5, self.duration)) 
-        self.f50.clicked.connect(partial(self.playInstrumentKey, "f", 5, self.duration))
-        self.g50.clicked.connect(partial(self.playInstrumentKey, "g", 5, self.duration)) 
-        self.a50.clicked.connect(partial(self.playInstrumentKey, "a", 5, self.duration))
+        self.c50.clicked.connect(partial(self.playInstrumentKey, "c", 5)) 
+        self.d50.clicked.connect(partial(self.playInstrumentKey, "d", 5)) 
+        self.f50.clicked.connect(partial(self.playInstrumentKey, "f", 5))
+        self.g50.clicked.connect(partial(self.playInstrumentKey, "g", 5)) 
+        self.a50.clicked.connect(partial(self.playInstrumentKey, "a", 5))
         
 
     def retranslateUi(self):
