@@ -70,6 +70,8 @@ class Window(QMainWindow):
         self.samplerate = 0
         # Frequency Domain
         self.fftData = np.array([0])
+        self.fftDataPhase = np.array([0])
+        self.fftDataMagnitude = np.array([0])
         self.freqFftData = np.array([0])
         # Music
         self.speaker = music()
@@ -511,13 +513,14 @@ class Window(QMainWindow):
         # Initialize min and max frequencies
         minFreq = freqRange[0]
         maxFreq = freqRange[1]
-
+        
         rangeFreq = (self.freqFftData >= minFreq) & (self.freqFftData <= maxFreq)
-        self.fftData[rangeFreq] /= 10**(self.gain_List[num]/10)
-        self.fftData[rangeFreq] *= 10**(gain/10)
+        self.fftDataMagnitude[rangeFreq] /= 10**(self.gain_List[num]/10)
+        self.fftDataMagnitude[rangeFreq] *= 10**(gain/10)
         self.gain_List[num] = gain
-
-        logging.info(f"Gain of instrument {num} with frequency ranges between {minFreq} and {maxFreq} has changed to {gain}")
+        
+        # How to get phase and save it.
+        # self.fftData = self.fftDataMagnitude + (self.fftDataPhase * j)
 
         # Inverse fourier transform for the sound
         self.data = self.inverseFourierTransform(self.fftData)
@@ -534,8 +537,12 @@ class Window(QMainWindow):
     # Fourier transform
     def fourierTransform(self, data, samplerate):
         try:
-            self.fftData = np.copy(np.fft.rfft(data))
+            self.fftData = np.fft.rfft(data)
+            self.fftDataMagnitude = np.abs(self.fftData)
+            self.fftDataPhase = np.angle(self.fftData)
+
             self.freqFftData = np.fft.rfftfreq(n=len(self.data), d=1./samplerate)
+
         except:
             logging.error(f"Failed to make DFT on array with {np.ndim(self.data)} dimension and shape = {np.shape(self.data)}.")
 
@@ -545,6 +552,7 @@ class Window(QMainWindow):
             equalizedData = np.fft.irfft(fftData)
             if np.ndim(equalizedData) == 1:
                 equalizedData = np.asanyarray(equalizedData, dtype=np.int16)
+
             return equalizedData
         except:
             logging.error(f"Failed to make Inverse DFT on array with {np.ndim(fftData)} dimension and shape = {np.shape(fftData)}.")
