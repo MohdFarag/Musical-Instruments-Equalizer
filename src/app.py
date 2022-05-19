@@ -60,7 +60,7 @@ class Window(QMainWindow):
         logging.debug("Application started")
 
         # Initialize Variable
-        self.gain_List = [1, 1, 1]
+        self.gain_List = [0, 0, 0]
         self.timer = QtCore.QTimer()
         # Time Domain
         self.data = np.array([0])
@@ -299,9 +299,9 @@ class Window(QMainWindow):
         # Piano instrument slider
         self.pianoSlider = QSlider()
 
-        bottomLayout.addLayout(self.sliderInstrumentLayoutEQ(self.guitarSlider,"images/guitarIcon.ico", (160, 600),0))
-        bottomLayout.addLayout(self.sliderInstrumentLayoutEQ(self.drumSlider,"images/drumIcon.png", (0,120),1))
-        bottomLayout.addLayout(self.sliderInstrumentLayoutEQ(self.pianoSlider,"images/pianoIcon.png", (1000,2500),2))
+        bottomLayout.addLayout(self.sliderInstrumentLayoutEQ(self.guitarSlider, "images/guitarIcon.ico", (160, 600),0))
+        bottomLayout.addLayout(self.sliderInstrumentLayoutEQ(self.drumSlider, "images/drumIcon.png", (0,120),1))
+        bottomLayout.addLayout(self.sliderInstrumentLayoutEQ(self.pianoSlider, "images/pianoIcon.png", (1000,2000),2))
 
         mainLayout.addLayout(topLayout,1)
         mainLayout.addWidget(QHLine())
@@ -480,7 +480,7 @@ class Window(QMainWindow):
         instrumentSlider.setMaximum(10)
         instrumentSlider.setTickInterval(5)
         instrumentSlider.setSingleStep(1)
-        instrumentSlider.setValue(1)
+        instrumentSlider.setValue(0)
 
         instrumentSlider.sliderReleased.connect(lambda: self.equalizeSound(instrumentSlider.value(), hzRange, num))
 
@@ -516,9 +516,6 @@ class Window(QMainWindow):
         self.fftData[rangeFreq] /= 10**(self.gain_List[num]/10)
         self.fftData[rangeFreq] *= 10**(gain/10)
         self.gain_List[num] = gain
-
-        print(num)
-        print(self.gain_List)
 
         logging.info(f"Gain of instrument {num} with frequency ranges between {minFreq} and {maxFreq} has changed to {gain}")
 

@@ -32,17 +32,24 @@ StyleSheet = '''
 }
 '''
 
+qss = """
+#widget {
+    border-image: url(images/start.png) 0 0 0 0 stretch stretch;
+}
+""" 
+
 if __name__ == "__main__":
 
     # Initialize Our Window App
     app = QApplication(sys.argv)
     app.setStyle('Fusion')
     app.setStyleSheet(StyleSheet)
+    app.setStyleSheet(qss)
 
-    # popWin = popWindow("Dark or Light or Orange ?", ["Light", "Orange", "Dark"])
-    # popWin.show()
-    Win = Window()
-    Win.show()
+    popWin = popWindow("Dark or Light or Orange ?", ["Light", "Orange", "Dark"])
+    popWin.show()
+    # Win = Window()
+    # Win.show()
 
     # Run the application
     sys.exit(app.exec_())
