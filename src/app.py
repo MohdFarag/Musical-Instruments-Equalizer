@@ -1,6 +1,7 @@
 # !/usr/bin/python
 
 # AdditionsQt
+from sympy import true
 from additionsQt import *
 # Threads
 from Threads import *
@@ -514,13 +515,13 @@ class Window(QMainWindow):
         minFreq = freqRange[0]
         maxFreq = freqRange[1]
         
-        rangeFreq = (self.freqFftData >= minFreq) & (self.freqFftData <= maxFreq)
+        rangeFreq = (self.freqFftData > minFreq) & (self.freqFftData < maxFreq)
         self.fftDataMagnitude[rangeFreq] /= 10**(self.gain_List[num]/10)
         self.fftDataMagnitude[rangeFreq] *= 10**(gain/10)
         self.gain_List[num] = gain
         
         # How to get phase and save it.
-        # self.fftData = self.fftDataMagnitude + (self.fftDataPhase * j)
+        self.fftData = self.fftDataMagnitude + self.fftDataPhase*1j
 
         # Inverse fourier transform for the sound
         self.data = self.inverseFourierTransform(self.fftData)
@@ -537,11 +538,12 @@ class Window(QMainWindow):
     # Fourier transform
     def fourierTransform(self, data, samplerate):
         try:
-            self.fftData = np.fft.rfft(data)
+            self.fftData = np.fft.fft(data)
+
             self.fftDataMagnitude = np.abs(self.fftData)
             self.fftDataPhase = np.angle(self.fftData)
 
-            self.freqFftData = np.fft.rfftfreq(n=len(self.data), d=1./samplerate)
+            self.freqFftData = np.fft.fftfreq(n=len(self.data), d=1./samplerate)
 
         except:
             logging.error(f"Failed to make DFT on array with {np.ndim(self.data)} dimension and shape = {np.shape(self.data)}.")
@@ -549,7 +551,7 @@ class Window(QMainWindow):
     # Inverse fourier transform
     def inverseFourierTransform(self, fftData):
         try:
-            equalizedData = np.fft.irfft(fftData)
+            equalizedData = np.fft.ifft(fftData)
             if np.ndim(equalizedData) == 1:
                 equalizedData = np.asanyarray(equalizedData, dtype=np.int16)
 
