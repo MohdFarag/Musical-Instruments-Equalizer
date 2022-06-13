@@ -54,3 +54,7 @@ datetime
 
 ![Main window - orange](docs/mainWindowOrange.png)
 ![Instruments window - dark](docs/instrumentsWindowOrange.png)
+
+---
+
+*note: Problem in equalizer, will be fixed.*
