@@ -57,4 +57,9 @@ datetime
 
 ---
 
-*note: Problem in equalizer, will be fixed.*
+***Note: problem in :***
+
+- *Equalizer algorithm*
+- *Equalizer sliders design*
+
+***will be fixed.***
