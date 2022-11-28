@@ -1,6 +1,6 @@
 # Musical Instruments Equalizer
 
-**Equalizer application for specific musical instruments (Piano, Guitar, Drum) whit ability to generate sound from it.**
+**Equalizer application for specific musical instruments (Piano, Guitar, Drum) with ability to generate sound from it.**
 
 ## Description
 
