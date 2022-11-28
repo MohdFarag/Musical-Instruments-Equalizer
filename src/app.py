@@ -538,7 +538,7 @@ class Window(QMainWindow):
         try:
             self.fftData = np.fft.fft(data)
 
-            self.fftDataMagnitude = np.absolute(self.fftData)
+            self.fftDataMagnitude = np.abs(self.fftData)
             self.fftDataPhase = np.angle(self.fftData)
 
             self.freqFftData = np.fft.fftfreq(n=len(self.data), d=1./samplerate)
